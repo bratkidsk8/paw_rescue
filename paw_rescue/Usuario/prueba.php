@@ -15,9 +15,9 @@
 
   <!-- Navbar -->
    <nav class="navbar navbar-expand-lg bg-white shadow-sm">
-  <div class="container-fluid">
+    <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="index.php">
-      <img src="https://cdn-icons-png.flaticon.com/512/616/616409.png" alt="logo" width="30" class="me-2">
+      <img src="https://cdn-icons-png.flaticon.com/512/616/616409.png" alt="logo" width="30" class="me-2" href="index.php">
       Paw Rescue
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

@@ -15,7 +15,7 @@
 
   <!-- Navbar -->
    <nav class="navbar navbar-expand-lg bg-white shadow-sm">
-  <div class="container-fluid">
+    <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="index.php">
       <img src="https://cdn-icons-png.flaticon.com/512/616/616409.png" alt="logo" width="30" class="me-2" href="index.php">
       Paw Rescue
@@ -27,6 +27,7 @@
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item"><a class="nav-link" href="info.php">Acerca de</a></li>
+        
         <!-- Dropdown de Adoptar -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="adoptar.php" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
