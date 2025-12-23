@@ -15,8 +15,8 @@
 
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg bg-white shadow-sm">
-  <div class="container-fluid">
-    <a class="navbar-brand fw-bold" href="index.html">
+   <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="index.php">
       <img src="https://cdn-icons-png.flaticon.com/512/616/616409.png" alt="logo" width="30" class="me-2">
       Paw Rescue
     </a>
@@ -26,25 +26,25 @@
 
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav">
-        <li class="nav-item"><a class="nav-link" href="info.html">Acerca de</a></li>
+        <li class="nav-item"><a class="nav-link" href="info.php">Acerca de</a></li>
         
         <!-- Dropdown de Adoptar -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="adoptar.html" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <a class="nav-link dropdown-toggle" href="adoptar.php" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Adoptar
           </a>
           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="adoptar.html">Ver mascotas</a></li>
-            <li><a class="dropdown-item" href="cuestionario.html">Cuestionario</a></li>
-            <li><a class="dropdown-item" href="prueba.html">Prueba de adopción</a></li>
+            <li><a class="dropdown-item" href="adoptar.php">Ver mascotas</a></li>
+            <li><a class="dropdown-item" href="cuestionario.php">Cuestionario</a></li>
+            <li><a class="dropdown-item" href="prueba.php">Prueba de adopción</a></li>
           </ul>
         </li>
 
-        <li class="nav-item"><a class="nav-link" href="donar.html">Donaciones</a></li>
-        <li class="nav-item"><a class="nav-link" href="reporte.html">Reportar</a></li>
-        <li class="nav-item"><a class="nav-link" href="contacto.html">Contacto</a></li>
+        <li class="nav-item"><a class="nav-link" href="donar.php">Donaciones</a></li>
+        <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
+        <li class="nav-item"><a class="nav-link" href="contacto.php">Contacto</a></li>
       </ul>
-      <a href="login.html" class="btn btn-outline-dark ms-3">Login</a>
+      <a href="login.php" class="btn btn-outline-dark ms-3">Login</a>
     </div>
   </div>
 </nav>
