@@ -39,8 +39,7 @@
   <!-- Hero Section -->
   <section class="hero">
     <div>
-      <h1>ADOPTA <br> A TU <br> NUEVO MEJOR <br> AMIGO</h1>
-      <a href="adoptar.html" class="btn btn-adoptar btn-lg">ADOPTA AQUÍ</a>
+      <h1>Bienvenido  <br> administrador</h1>
     </div>
   </section>
 
