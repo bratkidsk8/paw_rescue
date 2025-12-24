@@ -7,7 +7,7 @@ try {
     );
 
     $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    echo "✅ Conexión exitosa desde XAMPP";
+    echo "Conexión exitosa desde XAMPP";
 } catch (PDOException $e) {
     die("❌ Error de conexión: " . $e->getMessage());
 }

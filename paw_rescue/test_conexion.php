@@ -4,8 +4,8 @@ $conn = pg_connect(
 );
 
 if (!$conn) {
-    die("❌ Error de conexión");
+    die(" Error de conexión");
 }
 
-echo "✅ Conectado correctamente";
+echo "Conectado correctamente";
 ?>
