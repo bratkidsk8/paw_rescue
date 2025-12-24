@@ -1,9 +1,11 @@
 <?php
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$conn = pg_connect(
+  "host=localhost port=5432 dbname=paw_rescue user=murasaki password=projpaw1"
+);
 
-try {
-    $conexion = new mysqli("localhost", "root", "", "paw_rescue", 3306);
-    echo "CONECTADO CORRECTAMENTE";
-} catch (mysqli_sql_exception $e) {
-    echo "ERROR REAL: " . $e->getMessage();
+if (!$conn) {
+    die("❌ Error de conexión");
 }
+
+echo "✅ Conectado correctamente";
+?>

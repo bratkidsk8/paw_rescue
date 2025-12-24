@@ -1,15 +1,14 @@
 <?php
-$host = "127.0.0.1";
-$usuario = "root";
-$password = "";
-$bd = "paw_rescue";
-$puerto = 3306
+try {
+    $conexion = new PDO(
+        "pgsql:host=127.0.0.1;port=5432;dbname=paw_rescue",
+        "murasaki",
+        "projpaw1"
+    );
 
-$conexion = new mysqli($host, $usuario, $password, $bd);
-
-/* Validar conexión */
-if ($conexion->connect_error) {
-    // Mientras no exista la BD, no rompemos el sistema
-    $conexion = null;
+    $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    echo "✅ Conexión exitosa desde XAMPP";
+} catch (PDOException $e) {
+    die("❌ Error de conexión: " . $e->getMessage());
 }
 ?>
