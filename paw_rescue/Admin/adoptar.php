@@ -59,10 +59,8 @@
           🐶 Perros
         </button>
         <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#">Perros</a></li>
-          <li><a class="dropdown-item" href="#">edad</a></li>
-          <li><a class="dropdown-item" href="#">tamaño</a></li>
-          <li><a class="dropdown-item" href="#">sexo</a></li>
+          <li><a class="dropdown-item" href="lista_perros.php"> 🐶 Perros</a></li>
+          <li><a class="dropdown-item" href="lista_gatos.php"> 🐈 gatos</a></li>
         </ul>
 
         <!-- Input búsqueda -->
