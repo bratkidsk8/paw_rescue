@@ -29,7 +29,7 @@
           <li class="nav-item"><a class="nav-link" href="adoptar.php">Reportes</a></li>
           <li class="nav-item"><a class="nav-link" href="agregar_mascota.php">Agregar mascotas</a></li>
           <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
-          <li class="nav-item"><a class="nav-link" href="adoptar.php">Catalogo</a></li>
+          <li class="nav-item"><a class="nav-link" href="catalogo.php">Catalogo</a></li>
         </ul>
         <a href="login.php" class="btn btn-outline-dark ms-3">Login</a>
       </div>

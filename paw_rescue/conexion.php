@@ -1,14 +1,15 @@
 <?php
-try {
-    $conexion = new PDO(
-        "pgsql:host=127.0.0.1;port=5432;dbname=paw_rescue",
-        "murasaki",
-        "projpaw1"
-    );
+$conexion = pg_connect(
+  "host=localhost port=5432 dbname=paw_rescue user=murasaki password=projpaw1"
+);
 
-    $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    echo "Conexión exitosa desde XAMPP";
-} catch (PDOException $e) {
-    die("❌ Error de conexión: " . $e->getMessage());
+if (!$conexion) {
+  die("❌ NO CONECTA");
 }
+
+$result = pg_query($conexion, "SELECT current_database(), current_schema()");
+$row = pg_fetch_assoc($result);
+
+echo "BD: " . $row['current_database'] . "<br>";
+echo "SCHEMA: " . $row['current_schema'] . "<br>";
 ?>
