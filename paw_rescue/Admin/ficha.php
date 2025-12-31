@@ -1,6 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 
 include("../../paw_rescue/conexion.php");
 pg_query($conexion, "SET search_path TO paw_rescue");

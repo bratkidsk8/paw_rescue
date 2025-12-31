@@ -1,44 +1,64 @@
 <?php
-include("conexion.php");
+include("../../paw_rescue/conexion.php");
+pg_query($conexion, "SET search_path TO paw_rescue");
 
-/* Filtro por especie */
+/* =========================
+   FILTROS
+========================= */
+$titulo = "Razas disponibles";
 $filtro = "";
-$titulo = "Mascotas";
 
 if (isset($_GET['especie'])) {
-  if ($_GET['especie'] == 'perro') {
-    $filtro = "WHERE especie = 'perro'";
-    $titulo = "Perros";
-  } elseif ($_GET['especie'] == 'gato') {
-    $filtro = "WHERE especie = 'gato'";
-    $titulo = "Gatos";
-  }
+    if ($_GET['especie'] === 'perro') {
+        $filtro = "WHERE LOWER(e.nombre) = 'perro'";
+        $titulo = "Razas de Perros";
+    } elseif ($_GET['especie'] === 'gato') {
+        $filtro = "WHERE LOWER(e.nombre) = 'gato'";
+        $titulo = "Razas de Gatos";
+    }
 }
 
-$query = "SELECT * FROM mascotas $filtro";
-$resultado = $conexion->query($query);
+/* =========================
+   CONSULTA
+========================= */
+$query = "
+    SELECT 
+        r.id_raza,
+        r.nombre AS raza,
+        e.nombre AS especie,
+        COUNT(a.id_animal) AS total
+    FROM animal a
+    JOIN raza r ON a.id_raza = r.id_raza
+    JOIN especie e ON a.id_esp = e.id_esp
+    $filtro
+    GROUP BY r.id_raza, r.nombre, e.nombre
+    ORDER BY r.nombre
+";
+
+$resultado = pg_query($conexion, $query);
+
+if (!$resultado) {
+    die('Error SQL: ' . pg_last_error($conexion));
+}
+
+$total_razas = pg_num_rows($resultado);
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Adopción</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css">
+<meta charset="UTF-8">
+<title>Adopción</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
 
-<!-- Navbar -->
+<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg bg-white shadow-sm">
   <div class="container-fluid">
-    <a class="navbar-brand fw-bold" href="index.php">
-      <img src="https://cdn-icons-png.flaticon.com/512/616/616409.png" width="30" class="me-2">
-      Paw Rescue
-    </a>
+    <a class="navbar-brand fw-bold" href="index.php">🐾 Paw Rescue</a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
@@ -47,87 +67,63 @@ $resultado = $conexion->query($query);
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item"><a class="nav-link" href="info.php">Acerca de</a></li>
-
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="adoptar.php" role="button" data-bs-toggle="dropdown">
-            Adoptar
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="adoptar.php">Ver mascotas</a></li>
-            <li><a class="dropdown-item" href="cuestionario.php">Cuestionario</a></li>
-            <li><a class="dropdown-item" href="prueba.php">Prueba de adopción</a></li>
-          </ul>
-        </li>
-
-        <li class="nav-item"><a class="nav-link" href="donar.php">Donaciones</a></li>
-        <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
+        <li class="nav-item"><a class="nav-link active" href="adoptar.php">Adoptar</a></li>
         <li class="nav-item"><a class="nav-link" href="contacto.php">Contacto</a></li>
       </ul>
-
-      <a href="login.php" class="btn btn-outline-dark ms-3">Login</a>
     </div>
   </div>
 </nav>
 
-<!-- Hero -->
-<section class="titulo">
-  <h2>Tu nuevo amigo espera un nuevo hogar</h2>
-</section>
-
-<section class="l1">
-  <h2>Busca a tu mascota ideal</h2>
-</section>
-
-<!-- Filtro -->
 <section class="container my-5">
 
-  <div class="row mb-4">
-    <div class="col-md-12 d-flex justify-content-center">
-      <div class="input-group w-75">
-        <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-          🐾 Filtrar
-        </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="adoptar.php">🐾 Todas</a></li>
-          <li><a class="dropdown-item" href="adoptar.php?especie=perro">🐶 Perros</a></li>
-          <li><a class="dropdown-item" href="adoptar.php?especie=gato">🐈 Gatos</a></li>
-        </ul>
-
-        <input type="text" class="form-control" placeholder="Buscar raza..." disabled>
-        <button class="btn btn-dark" disabled>Buscar</button>
-      </div>
-    </div>
+  <!-- BOTONES -->
+  <div class="text-center mb-4">
+    <a href="adoptar.php" class="btn btn-outline-dark">🐾 Todas</a>
+    <a href="adoptar.php?especie=perro" class="btn btn-outline-primary">Perros</a>
+    <a href="adoptar.php?especie=gato" class="btn btn-outline-warning">Gatos</a>
   </div>
 
-  <!-- Título dinámico -->
+  <!-- TITULO -->
   <h3 class="fw-bold mb-4">
     <?= $titulo ?>
-    <span class="text-muted fs-5"><?= $resultado->num_rows ?></span>
+    <span class="text-muted">(<?= $total_razas ?>)</span>
   </h3>
 
-  <!-- Grid dinámico -->
+  <!-- GRID -->
   <div class="row g-4">
-    <?php while ($mascota = $resultado->fetch_assoc()) { ?>
-      <div class="col-md-3">
-        <a href="detalle.php?id=<?= $mascota['id_mascota'] ?>" class="text-decoration-none text-dark">
-          <div class="card shadow-sm h-100">
-            <img src="../img/<?= $mascota['imagen'] ?>" class="card-img-top">
-            <div class="card-body">
-              <h5 class="card-title"><?= $mascota['raza'] ?></h5>
-              <p class="card-text text-muted">
-                <?= $mascota['disponibles'] ?> disponibles · <?= ucfirst($mascota['especie']) ?>
-              </p>
-            </div>
-          </div>
-        </a>
+
+    <?php if ($total_razas == 0) { ?>
+      <div class="col-12 text-center text-muted">
+        No hay razas registradas.
       </div>
     <?php } ?>
-  </div>
 
+    <?php while ($row = pg_fetch_assoc($resultado)) { ?>
+      <div class="col-md-3">
+        <div class="card shadow-sm h-100 text-center">
+          <div class="card-body">
+            <h5><?= htmlspecialchars($row['raza']) ?></h5>
+
+            <p class="text-muted"><?= ucfirst($row['especie']) ?></p>
+
+            <span class="badge bg-dark mb-2">
+              <?= $row['total'] ?> disponibles
+            </span>
+
+            <div class="d-grid">
+           <a href="razas/detalleRaza.php?id_raza=<?= $row['id_raza'] ?>&especie=<?= strtolower($row['especie']) ?>"
+           class="btn btn-sm btn-outline-dark"> Ver</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <?php } ?>
+
+  </div>
 </section>
 
-<footer>
-  MURASAKI 2026. ©
+<footer class="text-center py-4">
+  MURASAKI 2026 ©
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

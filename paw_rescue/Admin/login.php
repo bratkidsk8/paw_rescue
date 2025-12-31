@@ -56,14 +56,6 @@
                     </div>
                     <button type="button" class="btn btn-dark" id="env">Iniciar Sesion</button>
                 </form>
-                <div class="extra">
-                    <div class="text" id="margen">
-                        Olvide mi contraseña
-                    </div>
-                    <a class="text" href="registro.html">
-                        Registrarse
-                    </a>
-                </div>
             </div>
         </div>
     </body>
