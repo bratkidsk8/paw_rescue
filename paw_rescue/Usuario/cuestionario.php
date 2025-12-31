@@ -1,136 +1,178 @@
+<?php
+session_start();
+
+/* ========= PROTECCIÓN =========
+   Solo usuarios logueados */
+if (!isset($_SESSION['id_usuario'])) {
+    header("Location: login.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cuestionario de Adopción</title>
+    <meta charset="UTF-8">
+    <title>Cuestionario de Adopción</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="../css/style.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg bg-white shadow-sm">
-     <div class="container-fluid">
+<!-- NAVBAR (RESPETADO) -->
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+  <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="index.php">
-      <img src="https://cdn-icons-png.flaticon.com/512/616/616409.png" alt="logo" width="30" class="me-2" href="index.php">
-      Paw Rescue
+      🐾 Paw Rescue
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
 
-    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item"><a class="nav-link" href="info.php">Acerca de</a></li>
-        
-        <!-- Dropdown de Adoptar -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="adoptar.php" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Adoptar
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="adoptar.php">Ver mascotas</a></li>
-            <li><a class="dropdown-item" href="cuestionario.php">Cuestionario</a></li>
-            <li><a class="dropdown-item" href="prueba.php">Prueba de adopción</a></li>
-          </ul>
-        </li>
-
-        <li class="nav-item"><a class="nav-link" href="donar.php">Donaciones</a></li>
-        <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
-        <li class="nav-item"><a class="nav-link" href="contacto.php">Contacto</a></li>
-      </ul>
-      <a href="login.php" class="btn btn-outline-dark ms-3">Login</a>
-    </div>
-    </div>
-  </nav>
-
-  <!-- Sección Cuestionario -->
-  <section class="container my-5">
-    <h2 class="text-center mb-4">Cuestionario de Adopción</h2>
-    <p class="text-center mb-5">Completa este cuestionario para ayudarnos a conocer mejor tu perfil como adoptante. <br>Esto nos permitirá conocer si eres candidato.<br></p>
-
-    <form id="form-cuestionario" class="shadow p-4 rounded bg-light">
-      <!-- Datos personales -->
-      <h5 class="mb-3">Datos personales</h5>
-      <div class="mb-3">
-        <label for="nombre" class="form-label">Nombre completo</label>
-        <input type="text" id="nombre" name="nombre" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label for="correo" class="form-label">Correo electrónico</label>
-        <input type="email" id="correo" name="correo" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label for="telefono" class="form-label">Teléfono</label>
-        <input type="tel" id="telefono" name="telefono" class="form-control" required>
-      </div>
-
-      <!-- Información sobre la adopción -->
-      <h5 class="mt-4 mb-3">Información sobre la adopción</h5>
-      <div class="mb-3">
-        <label for="tipoMascota" class="form-label">¿Qué mascota deseas adoptar?</label>
-        <select id="tipoMascota" name="tipoMascota" class="form-select" required>
-          <option value="">Selecciona</option>
-          <option value="perro">Perro</option>
-          <option value="gato">Gato</option>
-        </select>
-      </div>
-      <div class="mb-3">
-        <label for="experiencia" class="form-label">¿Tienes experiencia cuidando mascotas?</label>
-        <select id="experiencia" name="experiencia" class="form-select" required>
-          <option value="">Selecciona</option>
-          <option value="si">Sí</option>
-          <option value="no">No</option>
-        </select>
-      </div>
-      <div class="mb-3">
-        <label for="vivienda" class="form-label">Tipo de vivienda</label>
-        <select id="vivienda" name="vivienda" class="form-select" required>
-          <option value="">Selecciona</option>
-          <option value="casa">Casa</option>
-          <option value="departamento">Departamento</option>
-          <option value="otro">Otro</option>
-        </select>
-      </div>
-      <div class="mb-3">
-        <label for="razonAdopcion" class="form-label">¿Por qué quieres adoptar?</label>
-        <textarea id="razonAdopcion" name="razonAdopcion" rows="3" class="form-control" required></textarea>
-      </div>
-      <div class="mb-3">
-        <label for="tiempoDisponible" class="form-label">¿Cuánto tiempo puedes dedicarle al día?</label>
-        <input type="text" id="tiempoDisponible" name="tiempoDisponible" class="form-control" required>
-      </div>
-
-      <!-- Botón enviar -->
-      <div class="text-center">
-        <button type="submit" class="btn btn-success">Enviar cuestionario</button>
-      </div>
-    </form>
-  </section>
-
-  <!-- Modal confirmación -->
-  <div class="modal fade" id="modalConfirmacion" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content text-center p-4">
-        <h5 class="mb-3">✅ Cuestionario enviado</h5>
-        <p>Gracias por tu interés en adoptar. Nuestro equipo revisará tus respuestas y se pondrá en contacto contigo pronto.</p>
-        <button class="btn btn-primary w-100" data-bs-dismiss="modal">Aceptar</button>
-      </div>
+    <div class="collapse navbar-collapse justify-content-end">
+      <a href="logout.php" class="btn btn-outline-danger">Cerrar sesión</a>
     </div>
   </div>
+</nav>
 
-  <!-- Pie de página -->
-  <footer class="text-center py-3 bg-light">
-    MURASAKI 2026. ©
-  </footer>
+<!-- CONTENIDO -->
+<section class="container my-5">
+    <h2 class="text-center mb-3">📋 Cuestionario de Adopción</h2>
+    <p class="text-center mb-4">
+        Este cuestionario nos ayuda a evaluar si el hogar es adecuado para una mascota.
+    </p>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../js/cuestionario.js"></script>
+    <form action="guardar_cuestionario.php" method="POST" class="shadow p-4 rounded bg-light">
+
+        <!-- CURP -->
+        <h5>Identificación</h5>
+        <div class="mb-3">
+            <label class="form-label">CURP</label>
+            <input type="text" name="curp" class="form-control" maxlength="18" required>
+        </div>
+
+        <!-- VIVIENDA -->
+        <h5 class="mt-4">Vivienda</h5>
+
+        <div class="mb-3">
+            <label class="form-label">Tipo de vivienda</label>
+            <select name="tipo_vivienda" class="form-select" required>
+                <option value="">Selecciona</option>
+                <option value="1">Casa</option>
+                <option value="2">Departamento</option>
+                <option value="3">Otro</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">¿La vivienda es rentada?</label>
+            <select name="permiso_renta" class="form-select">
+                <option value="">No aplica</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">¿Cuenta con comprobante de domicilio?</label>
+            <select name="comprobante_domicilio" class="form-select" required>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">¿Cuenta con espacio adecuado para la mascota?</label>
+            <select name="espacio_adecuado" class="form-select" required>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">¿La vivienda tiene protecciones (bardas, rejas)?</label>
+            <select name="protecciones" class="form-select" required>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">¿Hay niños en el hogar?</label>
+            <select name="convivencia_ninos" class="form-select" required>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <!-- COMPROMISO -->
+        <h5 class="mt-4">Compromiso</h5>
+
+        <div class="mb-3">
+            <label class="form-label">¿Acepta visitas de supervisión?</label>
+            <select name="acepta_visitas" class="form-select" required>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">¿Acepta la esterilización?</label>
+            <select name="acepta_esterilizacion" class="form-select" required>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">¿Compromiso a largo plazo (10–15 años)?</label>
+            <select name="compromiso_largo_plazo" class="form-select" required>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">¿Puede cubrir gastos veterinarios?</label>
+            <select name="gastos_veterinarios" class="form-select" required>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <!-- MOTIVO -->
+        <h5 class="mt-4">Motivo de adopción</h5>
+        <div class="mb-3">
+            <select name="motivo" class="form-select">
+                <option value="">Selecciona</option>
+                <option value="1">Compañía</option>
+                <option value="2">Cuidado familiar</option>
+                <option value="3">Protección</option>
+                <option value="4">Otro</option>
+            </select>
+        </div>
+
+        <!-- OBSERVACIONES -->
+        <div class="mb-3">
+            <label class="form-label">Observaciones</label>
+            <textarea name="observaciones" class="form-control" rows="3"></textarea>
+        </div>
+
+        <!-- BOTÓN -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-success px-5">
+                Enviar cuestionario
+            </button>
+        </div>
+
+    </form>
+</section>
+
+<footer class="text-center py-3 bg-light">
+    MURASAKI 2026 ©
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

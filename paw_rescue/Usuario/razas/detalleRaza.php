@@ -1,6 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 
 include(__DIR__ . "/../../conexion.php");
 pg_query($conexion, "SET search_path TO paw_rescue");
@@ -78,8 +76,11 @@ $temps    = pg_query($conexion, "SELECT id_temp, nombre FROM temperamento ORDER 
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg bg-white shadow-sm">
   <div class="container-fluid">
-    <a class="navbar-brand fw-bold" href="index.php">🐾 Paw Rescue</a>
-    <a class="nav-link active ms-auto" href="adoptar.php">Adoptar</a>
+    <a class="navbar-brand fw-bold" href="<?= dirname($_SERVER['PHP_SELF'], 2) ?>/index.php">
+  🐾 Paw Rescue</a>
+
+    <a class="nav-link active ms-auto" href="<?= dirname($_SERVER['PHP_SELF'], 2) ?>/adoptar.php">
+     Adoptar</a>
   </div>
 </nav>
 

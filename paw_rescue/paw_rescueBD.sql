@@ -71,7 +71,10 @@ CREATE TABLE paw_rescue.estado_animal (
 CREATE TABLE paw_rescue.usuario (
     id_usuario INT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
-    correo VARCHAR(150) UNIQUE NOT NULL
+    correo VARCHAR(150) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    fecha_nacimiento DATE NOT NULL,
+    CONSTRAINT chk_mayor_edad CHECK (fecha_nacimiento <= CURRENT_DATE - INTERVAL '18 years')
 );
 
 CREATE TABLE paw_rescue.rol (
@@ -301,3 +304,87 @@ CREATE TABLE paw_rescue.img_raza (
     descripcion VARCHAR(150),
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ================================================================
+-- 11. CUESTIONARIO
+-- ================================================================
+
+-- ================================================================
+-- CUESTIONARIO DE ADOPCIÓN – PAW RESCUE
+-- ================================================================
+
+-- ===============================
+-- TIPOS DE VIVIENDA
+-- ===============================
+CREATE TABLE paw_rescue.tipo_vivienda (
+    id_tipo SERIAL PRIMARY KEY,
+    nombre VARCHAR(30) NOT NULL
+);
+
+-- ===============================
+-- ESTADO DEL CUESTIONARIO
+-- ===============================
+CREATE TABLE paw_rescue.estado_cuestionario (
+    id_estado SERIAL PRIMARY KEY,
+    nombre VARCHAR(30) NOT NULL
+);
+
+-- ===============================
+-- MOTIVO DE ADOPCIÓN
+-- ===============================
+CREATE TABLE paw_rescue.motivo_adopcion (
+    id_motivo SERIAL PRIMARY KEY,
+    descripcion VARCHAR(80) NOT NULL
+);
+
+-- ===============================
+-- CUESTIONARIO DE ADOPCIÓN
+-- ===============================
+CREATE TABLE paw_rescue.cuestionario_adopcion (
+    id_cuestionario SERIAL PRIMARY KEY,
+
+    -- Usuario que ya está registrado
+    id_usuario INT NOT NULL,
+    FOREIGN KEY (id_usuario)
+        REFERENCES paw_rescue.usuario(id_usuario)
+        ON DELETE CASCADE,
+
+    -- Identificación (CURP)
+    curp CHAR(18) NOT NULL,
+
+    -- Vivienda
+    id_tipo_vivienda INT NOT NULL,
+    FOREIGN KEY (id_tipo_vivienda)
+        REFERENCES paw_rescue.tipo_vivienda(id_tipo),
+
+    permiso_renta BOOLEAN,
+
+    -- Condiciones del hogar
+    comprobante_domicilio BOOLEAN NOT NULL,
+    espacio_adecuado BOOLEAN NOT NULL,
+    protecciones BOOLEAN NOT NULL,
+    convivencia_ninos BOOLEAN NOT NULL,
+
+    -- Compromisos del adoptante
+    acepta_visitas BOOLEAN NOT NULL,
+    acepta_esterilizacion BOOLEAN NOT NULL,
+    compromiso_largo_plazo BOOLEAN NOT NULL,
+    gastos_veterinarios BOOLEAN NOT NULL,
+
+    -- Motivo
+    id_motivo INT,
+    FOREIGN KEY (id_motivo)
+        REFERENCES paw_rescue.motivo_adopcion(id_motivo),
+
+    -- Estado del cuestionario
+    id_estado INT NOT NULL,
+    FOREIGN KEY (id_estado)
+        REFERENCES paw_rescue.estado_cuestionario(id_estado),
+
+    observaciones VARCHAR(1000),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
