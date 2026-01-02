@@ -1,4 +1,8 @@
 <?php
+session_start();
+?>
+
+<?php
 include("../../paw_rescue/conexion.php");
 pg_query($conexion, "SET search_path TO paw_rescue");
 
@@ -56,32 +60,74 @@ $total_razas = pg_num_rows($resultado);
 <body>
 
 <!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+      <nav class="navbar navbar-expand-lg bg-white shadow-sm">
   <div class="container-fluid">
-    <a class="navbar-brand fw-bold" href="index.php">🐾 Paw Rescue</a>
+    <a class="navbar-brand fw-bold" href="index.php">
+      <img src="https://cdn-icons-png.flaticon.com/512/616/616409.png"
+           alt="logo" width="30" class="me-2">
+      Paw Rescue
+    </a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav">
+
         <li class="nav-item"><a class="nav-link" href="info.php">Acerca de</a></li>
-        <li class="nav-item"><a class="nav-link active" href="adoptar.php">Adoptar</a></li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="adoptar.php"
+             role="button" data-bs-toggle="dropdown">
+            Adoptar
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="adoptar.php">Ver mascotas</a></li>
+            <li><a class="dropdown-item" href="cuestionario.php">Cuestionario</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item"><a class="nav-link" href="donar.php">Donaciones</a></li>
+        <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
         <li class="nav-item"><a class="nav-link" href="contacto.php">Contacto</a></li>
+
       </ul>
-    </div>
-  </div>
-</nav>
 
-<section class="container my-5">
+      <!-- ===== SESIÓN ===== -->
+      <?php if (isset($_SESSION['id_usuario'])): ?>
 
-  <!-- BOTONES -->
-  <div class="text-center mb-4">
-    <a href="adoptar.php" class="btn btn-outline-dark">🐾 Todas</a>
-    <a href="adoptar.php?especie=perro" class="btn btn-outline-primary">Perros</a>
-    <a href="adoptar.php?especie=gato" class="btn btn-outline-warning">Gatos</a>
-  </div>
+        <div class="dropdown ms-3">
+          <button class="btn btn-outline-dark dropdown-toggle"
+                  type="button" data-bs-toggle="dropdown">
+            Bienvenido, <?= htmlspecialchars($_SESSION['nombre']) ?>
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="perfil.php">Mi perfil</a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item text-danger" href="logout.php">
+                Cerrar sesión
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      <?php else: ?>
+
+        <a href="login.php" class="btn btn-outline-dark ms-3">
+          Login
+        </a>
+
+      <?php endif; ?>
+
+        </div>
+      </div>
+    </nav>
 
   <!-- TITULO -->
   <h3 class="fw-bold mb-4">

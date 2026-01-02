@@ -1,3 +1,30 @@
+<?php
+include("../paw_rescue/conexion.php");
+
+$nombre   = $_POST['nombre'] . " " . $_POST['apellido'];
+$correo   = $_POST['correo'];
+$fecha    = $_POST['fecha_nacimiento'];
+$password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+
+$sql = "
+INSERT INTO paw_rescue.usuario
+(nombre, correo, password, fecha_nacimiento)
+VALUES ($1, $2, $3, $4)
+";
+
+$params = [$nombre, $correo, $password, $fecha];
+
+$result = pg_query_params($conexion, $sql, $params);
+
+if ($result) {
+    header("Location: login.html?registro=ok");
+} else {
+    echo "Error al registrar usuario";
+}
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="es">
     <head>
@@ -44,32 +71,41 @@
             <div class="contc">
                     Registro
             </div>
-            <div class="formulario">
-                <form>
-                    <div class="mb-3">
-                        <label for="formGroupExampleInput" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="formGroupExampleInput" placeholder="Placeholder">
-                    </div>
-                    <div class="mb-3">
-                        <label for="formGroupExampleInput2" class="form-label">Apellido</label>
-                        <input type="text" class="form-control" id="formGroupExampleInput2" placeholder="Placeholder">
-                    </div>
-                    <div class="mb-3">
-                        <label for="formGroupExampleInput2" class="form-label">Telefono</label>
-                        <input type="text" class="form-control" id="formGroupExampleInput2" placeholder="Placeholder">
-                    </div>
-                    <div class="mb-3">
-                        <label for="formGroupExampleInput" class="form-label">Correo</label>
-                        <input type="text" class="form-control" id="formGroupExampleInput" placeholder="Placeholder">
-                    </div>
-                    <div class="mb-3">
-                        <label for="formGroupExampleInput2" class="form-label">Contraseña</label>
-                        <input type="text" class="form-control" id="formGroupExampleInput2" placeholder="Placeholder">
-                    </div>
-                    <button type="button" class="btn btn-dark" id="env">Registrarse</button>
-                </form>
-            </div>
-        </div>
+        <form action="registrar_usuario.php" method="POST">
+
+    <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Apellido</label>
+        <input type="text" class="form-control" name="apellido" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Teléfono</label>
+        <input type="text" class="form-control" name="telefono">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Correo</label>
+        <input type="email" class="form-control" name="correo" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Fecha de nacimiento</label>
+        <input type="date" class="form-control" name="fecha_nacimiento" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-control" name="password" required>
+    </div>
+
+    <button type="submit" class="btn btn-dark">Registrarse</button>
+</form>
+
     </body>
     <!-- pie pagina -->
     <footer>

@@ -4,67 +4,71 @@ include("../../paw_rescue/conexion.php");
 
 $mensaje = "";
 
+/* ===== MENSAJE REGISTRO OK ===== */
+$registro_ok = isset($_GET['registro']) && $_GET['registro'] === 'ok';
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    $correo   = trim($_POST["correo"]);
-    $password = $_POST["password"];
+    $correo   = trim($_POST["correo"] ?? '');
+    $password = $_POST["password"] ?? '';
 
-    try {
-        $stmt = $conn->prepare(
-            "SELECT u.id_usuario, u.nombre, u.correo, u.password, r.nombre AS rol
-             FROM paw_rescue.usuario u
-             JOIN paw_rescue.usuario_rol ur ON u.id_usuario = ur.id_usuario
-             JOIN paw_rescue.rol r ON ur.id_rol = r.id_rol
-             WHERE u.correo = :correo"
-        );
-        $stmt->execute([":correo" => $correo]);
-        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (empty($correo) || empty($password)) {
+        $mensaje = "❌ Correo y contraseña obligatorios";
+    } else {
 
-        if (!$usuario) {
-            throw new Exception("Correo o contraseña incorrectos");
+        $sql = "
+        SELECT 
+            u.id_usuario,
+            u.nombre,
+            u.correo,
+            u.password,
+            r.nombre AS rol
+        FROM paw_rescue.usuario u
+        JOIN paw_rescue.usuario_rol ur ON u.id_usuario = ur.id_usuario
+        JOIN paw_rescue.rol r ON ur.id_rol = r.id_rol
+        WHERE u.correo = $1
+        ";
+
+        $result = pg_query_params($conexion, $sql, [$correo]);
+
+        if (!$result || pg_num_rows($result) === 0) {
+            $mensaje = "❌ Correo o contraseña incorrectos";
+        } else {
+
+            $usuario = pg_fetch_assoc($result);
+
+            if (!password_verify($password, $usuario["password"])) {
+                $mensaje = "❌ Correo o contraseña incorrectos";
+            } else {
+
+                /* ===== CREAR SESIÓN ===== */
+                $_SESSION["id_usuario"] = $usuario["id_usuario"];
+                $_SESSION["nombre"]     = $usuario["nombre"];
+                $_SESSION["correo"]     = $usuario["correo"];
+                $_SESSION["rol"]        = $usuario["rol"];
+
+                /* ===== REDIRECCIÓN ===== */
+                header("Location: index.php");
+                exit;
+            }
         }
-
-        if (!password_verify($password, $usuario["password"])) {
-            throw new Exception("Correo o contraseña incorrectos");
-        }
-
-        // Crear sesión
-        $_SESSION["id_usuario"] = $usuario["id_usuario"];
-        $_SESSION["nombre"]     = $usuario["nombre"];
-        $_SESSION["correo"]     = $usuario["correo"];
-        $_SESSION["rol"]        = $usuario["rol"];
-
-        // Redirección según rol (puedes ajustarlo)
-        header("Location: index.php");
-        exit;
-
-    } catch (Exception $e) {
-        $mensaje = "❌ " . $e->getMessage();
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login | Paw Rescue</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/login.css">
 </head>
 
-<body>
+<body class="bg-light">
 
-<!-- ================= NAVBAR (RESPETADO) ================= -->
+<!-- ================= NAVBAR ================= -->
 <nav class="navbar navbar-expand-lg bg-white shadow-sm">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="index.php">
@@ -73,46 +77,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       Paw Rescue
     </a>
 
-    <button class="navbar-toggler" type="button"
-            data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item"><a class="nav-link" href="info.php">Acerca de</a></li>
-
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="adoptar.php"
-             id="navbarDropdown" role="button"
-             data-bs-toggle="dropdown">
-            Adoptar
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="adoptar.php">Ver mascotas</a></li>
-            <li><a class="dropdown-item" href="cuestionario.php">Cuestionario</a></li>
-            <li><a class="dropdown-item" href="prueba.php">Prueba de adopción</a></li>
-          </ul>
-        </li>
-
-        <li class="nav-item"><a class="nav-link" href="donar.php">Donaciones</a></li>
-        <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
-        <li class="nav-item"><a class="nav-link" href="contacto.php">Contacto</a></li>
-      </ul>
-
-      <a href="login.php" class="btn btn-outline-dark ms-3">Login</a>
+    <div class="collapse navbar-collapse justify-content-end">
+      <a href="login.php" class="btn btn-outline-dark">Login</a>
     </div>
   </div>
 </nav>
-<!-- ================= FIN NAVBAR ================= -->
 
-<div class="principal">
-  <div class="contc">
-    Inicio de Sesión
-  </div>
+<!-- ================= LOGIN ================= -->
+<div class="container mt-5">
+  <div class="card shadow p-4 mx-auto" style="max-width: 400px;">
 
-  <div class="formulario">
+    <h3 class="text-center mb-3">Iniciar Sesión</h3>
 
+    <!-- ALERT REGISTRO -->
+    <?php if ($registro_ok): ?>
+      <div class="alert alert-success alert-dismissible fade show text-center">
+        ✅ Registro exitoso. Ahora inicia sesión.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <?php endif; ?>
+
+    <!-- ALERT ERROR -->
     <?php if ($mensaje): ?>
       <div class="alert alert-danger text-center">
         <?= htmlspecialchars($mensaje) ?>
@@ -120,33 +105,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <?php endif; ?>
 
     <form method="POST">
+
       <div class="mb-3">
         <label class="form-label">Correo</label>
-        <input type="email" name="correo" class="form-control"
-               placeholder="ejemplo@correo.com" required>
+        <input type="email" name="correo" class="form-control" required>
       </div>
 
       <div class="mb-3">
         <label class="form-label">Contraseña</label>
-        <input type="password" name="password" class="form-control"
-               placeholder="********" required>
+        <input type="password" name="password" class="form-control" required>
       </div>
 
       <button type="submit" class="btn btn-dark w-100">
         Iniciar Sesión
       </button>
+
     </form>
 
-    <div class="extra d-flex justify-content-between mt-3">
-      <a href="#" class="text">Olvidé mi contraseña</a>
-      <a class="text" href="registro.php">Registrarse</a>
+    <div class="d-flex justify-content-between mt-3">
+      <a href="#" class="text-decoration-none">Olvidé mi contraseña</a>
+      <a href="registro.php" class="text-decoration-none">Registrarse</a>
     </div>
+
   </div>
 </div>
-
-<footer class="text-center mt-5">
-  MURASAKI 2026. ©
-</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
