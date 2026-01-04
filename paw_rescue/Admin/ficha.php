@@ -15,6 +15,7 @@ SELECT
     a.nombre,
     a.edad_aprox,
     a.tuvo_duenos_anteriores,
+    a.necesidades_especiales,
 
     e.nombre AS especie,
     r.nombre AS raza,
@@ -56,6 +57,7 @@ $m = pg_fetch_assoc($res);
 
 /* ========= NORMALIZAR ========= */
 $enfermo = ($m['enfermo'] === 't');
+$requiere_cuidados = ($m['necesidades_especiales'] === 't');
 ?>
 
 <!DOCTYPE html>
@@ -65,31 +67,18 @@ $enfermo = ($m['enfermo'] === 't');
 <title>Expediente - <?= htmlspecialchars($m['nombre']) ?></title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg bg-white shadow-sm">
-    <div class="container-fluid">
-      <a class="navbar-brand fw-bold" href="index.php">
-        <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="logo" width="30" class="me-2">
-        Marca
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-        <ul class="navbar-nav">
-          <li class="nav-item"><a class="nav-link" href="info.php">Peticiones</a></li>
-          <li class="nav-item"><a class="nav-link" href="adoptar.php">Reportes</a></li>
-          <li class="nav-item"><a class="nav-link" href="agregar_mascota.php">Agregar mascotas</a></li>
-          <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
-          <li class="nav-item"><a class="nav-link" href="catalogo.php">Catalogo</a></li>
-        </ul>
-        <a href="login.php" class="btn btn-outline-dark ms-3">Login</a>
-      </div>
-    </div>
-  </nav>
-
 
 <body class="bg-light">
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+<div class="container-fluid">
+<a class="navbar-brand fw-bold" href="index.php">🐾 Paw Rescue</a>
+<div class="collapse navbar-collapse justify-content-end">
+<a href="login.php" class="btn btn-outline-dark ms-3">Login</a>
+</div>
+</div>
+</nav>
 
 <div class="container my-5">
 
@@ -105,6 +94,35 @@ $enfermo = ($m['enfermo'] === 't');
   <li><b>Color:</b> <?= $m['color'] ?></li>
   <li><b>Edad aproximada:</b> <?= $m['edad_aprox'] ?> años</li>
   <li><b>Estado actual:</b> <?= $m['estado'] ?></li>
+</ul>
+
+<hr>
+
+<!-- ========= CUIDADOS ESPECIALES ========= -->
+<h4>Cuidados especiales</h4>
+<ul>
+<?php if (!$requiere_cuidados): ?>
+    <li>No requiere cuidados especiales</li>
+<?php else: ?>
+
+<?php
+$cuidados = pg_query($conexion, "
+    SELECT tc.nombre, ace.observaciones
+    FROM animal_cuidado_especial ace
+    JOIN tipo_cuidado_especial tc ON ace.id_cuidado = tc.id_cuidado
+    WHERE ace.id_animal = $id
+");
+
+if (pg_num_rows($cuidados) === 0) {
+    echo "<li>Requiere cuidados especiales (sin detalle registrado)</li>";
+}
+
+while ($c = pg_fetch_assoc($cuidados)) {
+    echo "<li><b>{$c['nombre']}:</b> {$c['observaciones']}</li>";
+}
+?>
+
+<?php endif; ?>
 </ul>
 
 <hr>
@@ -162,7 +180,7 @@ while ($row = pg_fetch_assoc($enf)) {
 
 <hr>
 
-<!-- ========= DESPARASITACIÓN / VACUNAS ========= -->
+<!-- ========= VACUNAS ========= -->
 <h4>Vacunas y desparasitación</h4>
 <ul>
 <?php
@@ -184,49 +202,6 @@ while ($v = pg_fetch_assoc($vac)) {
 
 <hr>
 
-<!-- ========= CURACIONES ========= -->
-<h4>Curaciones y tratamientos</h4>
-<ul>
-<?php
-$trat = pg_query($conexion, "
-SELECT t.medicamento, t.dosis, t.frecuencia, t.duracion
-FROM tratamiento t
-JOIN consulta c ON t.id_cons = c.id_cons
-WHERE c.id_animal = $id
-");
-
-if (pg_num_rows($trat) === 0) {
-    echo "<li>No hay tratamientos registrados</li>";
-}
-while ($t = pg_fetch_assoc($trat)) {
-    echo "<li>{$t['medicamento']} - Dosis: {$t['dosis']}</li>";
-}
-?>
-</ul>
-
-<hr>
-
-<!-- ========= CUIDADOS EN ALBERGUE ========= -->
-<h4>Cuidados en el albergue</h4>
-<ul>
-<?php
-$cui = pg_query($conexion, "
-SELECT tipo_cuidado, frecuencia, observaciones
-FROM cuidado_albergue
-WHERE id_animal = $id
-");
-
-if (pg_num_rows($cui) === 0) {
-    echo "<li>No hay cuidados registrados</li>";
-}
-while ($c = pg_fetch_assoc($cui)) {
-    echo "<li>{$c['tipo_cuidado']} ({$c['frecuencia']}) - {$c['observaciones']}</li>";
-}
-?>
-</ul>
-
-<hr>
-
 <!-- ========= IDENTIFICACIÓN ========= -->
 <h4>Identificación</h4>
 <ul>
@@ -239,7 +214,7 @@ while ($c = pg_fetch_assoc($cui)) {
 </div>
 
 <footer class="text-center py-3 bg-white shadow-sm">
-  Paw Rescue © 2026
+Paw Rescue © 2026
 </footer>
 
 </body>

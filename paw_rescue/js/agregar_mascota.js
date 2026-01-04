@@ -1,19 +1,10 @@
-const selectEspecie = document.getElementById('especie');
-const vacunasPerro = document.querySelectorAll('.perro');
-const vacunasGato = document.querySelectorAll('.gato');
+function toggleListaNegra(valor) {
+    const bloque = document.getElementById("datos_lista_negra");
+    if (!bloque) return;
 
-function ocultarTodas() {
-    vacunasPerro.forEach(v => v.style.display = 'none');
-    vacunasGato.forEach(v => v.style.display = 'none');
-}
-
-ocultarTodas();
-
-selectEspecie.addEventListener('change', (e) => {
-    ocultarTodas();
-    if (e.target.value === 'perro') {
-    vacunasPerro.forEach(v => v.style.display = 'block');
-    } else if (e.target.value === 'gato') {
-    vacunasGato.forEach(v => v.style.display = 'block');
+    if (valor === "SI") {
+        bloque.style.display = "block";
+    } else {
+        bloque.style.display = "none";
     }
-});
+}

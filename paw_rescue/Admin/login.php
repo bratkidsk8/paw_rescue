@@ -1,70 +1,108 @@
+<?php
+session_start();
+
+include(__DIR__ . "/../conexion.php");
+
+$mensaje = "";
+
+/* ===== SI YA HAY SESIÓN ===== */
+if (isset($_SESSION["admin_id"])) {
+    header("Location: dashboard_admin.php");
+    exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    $clave    = trim($_POST["clave"] ?? '');
+    $password = $_POST["password"] ?? '';
+
+    if ($clave === '' || $password === '') {
+        $mensaje = "Clave y contraseña obligatorias";
+    } else {
+
+        $sql = "
+            SELECT id_admin, nombre, password
+            FROM paw_rescue.admin
+            WHERE clave = $1
+        ";
+
+        $result = pg_query_params($conexion, $sql, [$clave]);
+
+        if (!$result || pg_num_rows($result) === 0) {
+            $mensaje = "Clave o contraseña incorrectas";
+        } else {
+
+            $admin = pg_fetch_assoc($result);
+
+            if (!password_verify($password, $admin["password"])) {
+                $mensaje = "Clave o contraseña incorrectas";
+            } else {
+
+                /* ===== CREAR SESIÓN ADMIN ===== */
+                $_SESSION["admin_id"]     = $admin["id_admin"];
+                $_SESSION["admin_nombre"] = $admin["nombre"];
+                $_SESSION["admin_login"]  = true;
+
+                header("Location: index.php");
+                exit;
+            }
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Login</title>
+<head>
+    <meta charset="UTF-8">
+    <title>Login Admin | Paw Rescue</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <!-- Bootstrap CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
 
-        <!--google fonts-->
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<body class="bg-light">
 
-        <!-- CSS -->
-        <link rel="stylesheet" href="../css/style.css">
-        <link rel="stylesheet" href="../css/login.css">
-    </head>
-    <body>
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="../index.php">
+            🐾 Paw Rescue
+        </a>
+    </div>
+</nav>
 
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg bg-white shadow-sm">
-            <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="index.php">
-                <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="logo" width="30" class="me-2">
-                Marca
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+<div class="container mt-5">
+    <div class="card shadow p-4 mx-auto" style="max-width: 420px;">
+
+        <h4 class="text-center mb-3">Acceso Administrador</h4>
+
+        <?php if ($mensaje): ?>
+            <div class="alert alert-danger text-center">
+                <?= htmlspecialchars($mensaje) ?>
+            </div>
+        <?php endif; ?>
+
+        <form method="POST">
+
+            <div class="mb-3">
+                <label class="form-label">Clave</label>
+                <input type="text" name="clave" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100">
+                Iniciar sesión
             </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav">
-                <li class="nav-item"><a class="nav-link" href="info.php">Peticiones</a></li>
-                <li class="nav-item"><a class="nav-link" href="adoptar.php">Reportes</a></li>
-                <li class="nav-item"><a class="nav-link" href="agregar_mascota.php">Agregar mascotas</a></li>
-                <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
-                <li class="nav-item"><a class="nav-link" href="adoptar.php">Catalogo</a></li>
-                </ul>
-                <a href="login.php" class="btn btn-outline-dark ms-3">Login</a>
-            </div>
-            </div>
-        </nav>
 
-        <div class="principal">
-            <div class="contc">
-                    Inicio de Sesion
-            </div>
-            <div class="formulario">
-                <form>
-                    <div class="mb-3">
-                        <label for="formGroupExampleInput" class="form-label">Correo</label>
-                        <input type="text" class="form-control" id="formGroupExampleInput" placeholder="Placeholder">
-                    </div>
-                    <div class="mb-3">
-                        <label for="formGroupExampleInput2" class="form-label">contraseña</label>
-                        <input type="text" class="form-control" id="formGroupExampleInput2" placeholder="Placeholder">
-                    </div>
-                    <button type="button" class="btn btn-dark" id="env">Iniciar Sesion</button>
-                </form>
-            </div>
-        </div>
-    </body>
-    <!-- pie pagina -->
-    <footer>
-        MURASAKI 2026. ©
-    </footer>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Script -->
-    <script src="script.js"></script>
+        </form>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
