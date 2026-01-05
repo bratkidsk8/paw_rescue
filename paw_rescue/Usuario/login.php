@@ -16,18 +16,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $mensaje = "❌ Correo y contraseña obligatorios";
     } else {
 
-        $sql = "
-        SELECT 
-            u.id_usuario,
-            u.nombre,
-            u.correo,
-            u.password,
-            r.nombre AS rol
-        FROM paw_rescue.usuario u
-        JOIN paw_rescue.usuario_rol ur ON u.id_usuario = ur.id_usuario
-        JOIN paw_rescue.rol r ON ur.id_rol = r.id_rol
-        WHERE u.correo = $1
-        ";
+      $sql = "
+      SELECT 
+          u.id_usuario,
+          u.nombre,
+          u.correo,
+          u.password,
+          COALESCE(r.nombre, 'usuario') AS rol
+      FROM paw_rescue.usuario u
+      LEFT JOIN paw_rescue.usuario_rol ur ON u.id_usuario = ur.id_usuario
+      LEFT JOIN paw_rescue.rol r ON ur.id_rol = r.id_rol
+      WHERE u.correo = $1
+      ";
+
 
         $result = pg_query_params($conexion, $sql, [$correo]);
 

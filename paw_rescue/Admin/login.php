@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <nav class="navbar navbar-expand-lg bg-white shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="../index.php">
+        <a class="navbar-brand fw-bold" href="login.php">
             🐾 Paw Rescue
         </a>
     </div>

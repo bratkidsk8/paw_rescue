@@ -1,7 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
 include(__DIR__ . "/../conexion.php");
 pg_query($conexion, "SET search_path TO paw_rescue");
 
@@ -12,18 +9,16 @@ if (!$id_esp) {
     exit;
 }
 
-$sql = "
+$res = pg_query_params($conexion, "
     SELECT id_raza, nombre
-    FROM paw_rescue.raza
+    FROM raza
     WHERE id_esp = $1
     ORDER BY nombre
-";
-
-$res = pg_query_params($conexion, $sql, [$id_esp]);
+", [$id_esp]);
 
 $razas = [];
-while ($r = pg_fetch_assoc($res)) {
-    $razas[] = $r;
+while ($row = pg_fetch_assoc($res)) {
+    $razas[] = $row;
 }
 
 header('Content-Type: application/json');

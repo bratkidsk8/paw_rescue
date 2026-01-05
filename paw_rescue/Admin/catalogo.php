@@ -83,53 +83,8 @@ if (!$result) {
 <!-- ===============================
      NAVBAR
 ================================ -->
-<nav class="navbar navbar-expand-lg bg-white shadow-sm">
-  <div class="container-fluid">
-    <a class="navbar-brand fw-bold" href="index.php">
-      <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="logo" width="30" class="me-2">
-      Paw Rescue
-    </a>
+<?php include("navbar.php"); ?>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-      <ul class="navbar-nav">
-
-        <li class="nav-item">
-          <a class="nav-link" href="info.php">Peticiones</a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" href="adoptar.php">Reportes</a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" href="agregarMascota.php">Agregar mascotas</a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" href="reporte.php">Reportar</a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" href="catalogo.php">Catálogo</a>
-        </li>
-
-      </ul>
-
-      <span class="me-3 fw-semibold">
-        admin: <?= htmlspecialchars($nombreAdmin) ?>
-      </span>
-
-      <a href="logoutAdmin.php" class="btn btn-outline-danger">
-        Cerrar sesión
-      </a>
-
-    </div>
-  </div>
-</nav>
 
 <!-- ===============================
      FILTROS
