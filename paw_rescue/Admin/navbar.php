@@ -28,9 +28,9 @@ $nombreAdmin = $_SESSION['admin_nombre'] ?? 'Admin';
       <ul class="navbar-nav me-3">
 
         <li class="nav-item"><a class="nav-link" href="info.php">Peticiones</a></li>
-        <li class="nav-item"><a class="nav-link" href="adoptar.php">Reportes</a></li>
+        <li class="nav-item"><a class="nav-link" href="solicitudesAdopcion.php">proceso de adopcion</a></li>
         <li class="nav-item"><a class="nav-link" href="agregarMascota.php">Agregar mascotas</a></li>
-        <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
+        <li class="nav-item"><a class="nav-link" href="reporte.php">Reportes</a></li>
         <li class="nav-item"><a class="nav-link" href="catalogo.php">Catálogo</a></li>
 
       </ul>

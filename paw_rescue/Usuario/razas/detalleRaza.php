@@ -71,7 +71,7 @@ $estatus = pg_query($conexion, "SELECT id_estatus, nombre FROM estatus_adop ORDE
 </head>
 
 <body>
-  <?php include 'navbar.php'; ?>
+  <?php include '../navbar.php'; ?>
 
 <section class="container my-4">
 

@@ -2,11 +2,13 @@
 session_start();
 include("../conexion.php");
 
+/* ================= VALIDAR SESIÓN ================= */
 if (!isset($_SESSION['id_usuario'])) {
     header("Location: login.php");
     exit;
 }
 
+/* ================= VALIDAR ENVÍO ================= */
 if (!isset($_POST['enviar_cuestionario'])) {
     header("Location: cuestionario.php");
     exit;
@@ -14,28 +16,50 @@ if (!isset($_POST['enviar_cuestionario'])) {
 
 $id_usuario = $_SESSION['id_usuario'];
 
+/* ================= PROCESAR CONVIVIENTES ================= */
 $convivientes = $_POST['convivientes'] ?? [];
 $convivientes_txt = implode(', ', $convivientes);
 
+/* ================= INSERT ================= */
 $sql = "
 INSERT INTO paw_rescue.cuestionario_adopcion (
-  id_usuario, curp, codigo_postal, asentamiento_id, calle,
-  ingresos, tiempo_dedicado, personalidad, motivo_adopcion,
-  convivientes, total_personas, acuerdo_familiar,
-  experiencia_previa, destino_mascota,
-  cuidador, frecuencia_viajes,
-  conoce_costos, gasto_mensual,
-  respuesta_enfermedad, respuesta_danos, acepta_contrato,
-  plan_emergencia, plan_largo_plazo
+  id_usuario,
+  curp,
+  codigo_postal,
+  asentamiento_id,
+  calle,
+  ingresos,
+  tiempo_dedicado,
+  personalidad,
+  motivo_adopcion,
+  convivientes,
+  total_personas,
+  acuerdo_familiar,
+
+  preferencia_especie,
+  tipo_vivienda,
+  tiene_patio,
+  nivel_actividad,
+
+  experiencia_previa,
+  destino_mascota,
+  cuidador,
+  frecuencia_viajes,
+  conoce_costos,
+  gasto_mensual,
+  respuesta_enfermedad,
+  respuesta_danos,
+  acepta_contrato,
+  plan_emergencia,
+  plan_largo_plazo
 ) VALUES (
   $1,$2,$3,$4,$5,
   $6,$7,$8,$9,
   $10,$11,$12,
-  $13,$14,
-  $15,$16,
-  $17,$18,
-  $19,$20,$21,
-  $22,$23
+  $13,$14,$15,$16,
+  $17,$18,$19,$20,
+  $21,$22,$23,$24,
+  $25,$26,$27
 )
 ";
 
@@ -52,8 +76,14 @@ $params = [
   $convivientes_txt,
   $_POST['total_personas'],
   $_POST['acuerdo_familiar'],
+
+  $_POST['preferencia_especie'],
+  $_POST['tipo_vivienda'],
+  $_POST['tiene_patio'],
+  $_POST['nivel_actividad'],
+
   $_POST['experiencia_previa'],
-  $_POST['destino_mascota'],
+  $_POST['destino_mascota'] ?: null,
   $_POST['cuidador'],
   $_POST['frecuencia_viajes'],
   $_POST['conoce_costos'],
@@ -68,8 +98,9 @@ $params = [
 $res = pg_query_params($conexion, $sql, $params);
 
 if (!$res) {
-    die(pg_last_error($conexion));
+    die("❌ Error BD: " . pg_last_error($conexion));
 }
 
+/* ================= REDIRECCIÓN ================= */
 header("Location: gracias.php");
 exit;

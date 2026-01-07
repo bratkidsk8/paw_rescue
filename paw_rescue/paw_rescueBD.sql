@@ -20,9 +20,66 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA paw_rescue
 GRANT USAGE, SELECT ON SEQUENCES TO murasaki;
 
 -- ================================================================
--- 1. CATÁLOGOS
+-- 1. SEPOMEX
 -- ================================================================
+DROP TABLE IF EXISTS sepomex_tmp;
 
+CREATE TEMP TABLE sepomex_tmp (
+    codigo_postal TEXT,
+    entidad_id TEXT,
+    municipio_id TEXT,
+    municipio TEXT,
+    asentamiento_id TEXT,
+    asentamiento TEXT,
+    tipo_asentamiento TEXT
+);
+
+
+\COPY sepomex_tmp
+FROM '/Applications/XAMPP/xamppfiles/htdocs/paw_rescue/sepomex_base.csv'
+WITH (
+    FORMAT csv,
+    HEADER true,
+    DELIMITER ',',
+    ENCODING 'LATIN1'
+);
+
+
+CREATE TABLE paw_rescue.sepomex (
+    codigo_postal VARCHAR(5) NOT NULL,
+    entidad_id INTEGER NOT NULL,
+    municipio_id INTEGER NOT NULL,
+    municipio VARCHAR(100) NOT NULL,
+    asentamiento_id INTEGER NOT NULL,
+    asentamiento VARCHAR(150) NOT NULL,
+    tipo_asentamiento VARCHAR(100) NOT NULL,
+    PRIMARY KEY (codigo_postal, asentamiento_id)
+);
+
+INSERT INTO paw_rescue.sepomex (
+    codigo_postal,
+    entidad_id,
+    municipio_id,
+    municipio,
+    asentamiento_id,
+    asentamiento,
+    tipo_asentamiento
+)
+SELECT
+    LPAD(TRIM(codigo_postal), 5, '0'),
+    entidad_id::INTEGER,
+    municipio_id::INTEGER,
+    TRIM(municipio),
+    asentamiento_id::INTEGER,
+    TRIM(asentamiento),
+    TRIM(tipo_asentamiento)
+FROM sepomex_tmp
+WHERE codigo_postal ~ '^[0-9]{4,5}$';
+
+
+-- ================================================================
+-- 2. CATÁLOGOS
+-- ================================================================
 CREATE TABLE paw_rescue.tipo_id (
     id_tipo SERIAL PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL
@@ -36,65 +93,57 @@ CREATE TABLE paw_rescue.especie (
 CREATE TABLE paw_rescue.raza (
     id_raza SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    id_esp INT NOT NULL REFERENCES paw_rescue.especie(id_esp)
+    id_esp INT REFERENCES paw_rescue.especie(id_esp)
 );
 
 CREATE TABLE paw_rescue.tam (
     id_tam SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE paw_rescue.temperamento (
-    id_temp SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
+    nombre VARCHAR(50)
 );
 
 CREATE TABLE paw_rescue.color (
     id_color SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
+    nombre VARCHAR(50)
 );
 
 CREATE TABLE paw_rescue.color_ojos (
     id_ojos SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
+    nombre VARCHAR(50)
+);
+
+CREATE TABLE paw_rescue.temperamento (
+    id_temp SERIAL PRIMARY KEY,
+    nombre VARCHAR(50)
 );
 
 CREATE TABLE paw_rescue.estatus_adop (
     id_estatus SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
+    nombre VARCHAR(50)
 );
 
 CREATE TABLE paw_rescue.estado_animal (
     id_estado SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
+    nombre VARCHAR(50)
 );
 
 -- ================================================================
--- 2. USUARIOS Y ROLES
+-- 3. USUARIOS Y ROLES
 -- ================================================================
-
 CREATE TABLE paw_rescue.usuario (
     id_usuario SERIAL PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
     primer_apellido VARCHAR(150) NOT NULL,
-    segundo_apellido VARCHAR(150) NOT NULL,
+    segundo_apellido VARCHAR(150),
     correo VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     fecha_nacimiento DATE NOT NULL,
-    CONSTRAINT chk_mayor_edad 
+    CONSTRAINT chk_mayor_edad
         CHECK (fecha_nacimiento <= CURRENT_DATE - INTERVAL '18 years')
-);
-
-CREATE TABLE paw_rescue.admin (
-    id_admin SERIAL PRIMARY KEY,
-    clave VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    nombre VARCHAR(100)
 );
 
 CREATE TABLE paw_rescue.rol (
     id_rol SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
+    nombre VARCHAR(50)
 );
 
 CREATE TABLE paw_rescue.usuario_rol (
@@ -107,25 +156,34 @@ CREATE TABLE paw_rescue.adoptante (
     id_usuario INT PRIMARY KEY REFERENCES paw_rescue.usuario(id_usuario)
 );
 
--- ================================================================
--- 3. REFUGIOS
--- ================================================================
-
-CREATE TABLE paw_rescue.refugio (
-    id_ref SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    direccion VARCHAR(255),
-    telefono VARCHAR(20)
+CREATE TABLE paw_rescue.admin (
+    id_admin SERIAL PRIMARY KEY,
+    clave VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    nombre VARCHAR(100)
 );
 
 -- ================================================================
--- 4. ANIMALES
+-- 4. REFUGIOS
 -- ================================================================
+CREATE TABLE paw_rescue.refugio (
+    id_ref SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    calle VARCHAR(150),
+    telefono VARCHAR(20),
+    codigo_postal CHAR(5),
+    asentamiento_id INTEGER,
+    FOREIGN KEY (codigo_postal, asentamiento_id)
+        REFERENCES paw_rescue.sepomex (codigo_postal, asentamiento_id)
+);
 
+-- ================================================================
+-- 5. ANIMALES
+-- ================================================================
 CREATE TABLE paw_rescue.animal (
     id_animal SERIAL PRIMARY KEY,
     nombre VARCHAR(120) NOT NULL,
-    id_esp INT NOT NULL REFERENCES paw_rescue.especie(id_esp),
+    id_esp INT REFERENCES paw_rescue.especie(id_esp),
     id_raza INT REFERENCES paw_rescue.raza(id_raza),
     id_tam INT REFERENCES paw_rescue.tam(id_tam),
     id_color INT REFERENCES paw_rescue.color(id_color),
@@ -137,30 +195,13 @@ CREATE TABLE paw_rescue.animal (
     edad_aprox SMALLINT CHECK (edad_aprox >= 0),
     tuvo_duenos_anteriores BOOLEAN,
     necesidades_especiales BOOLEAN DEFAULT FALSE,
-    fecha_reg TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- ================================================================
--- 5. CUIDADOS ESPECIALES
--- ================================================================
-
-CREATE TABLE paw_rescue.tipo_cuidado_especial (
-    id_cuidado SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    descripcion VARCHAR(300)
-);
-
-CREATE TABLE paw_rescue.animal_cuidado_especial (
-    id_animal INT REFERENCES paw_rescue.animal(id_animal) ON DELETE CASCADE,
-    id_cuidado INT REFERENCES paw_rescue.tipo_cuidado_especial(id_cuidado),
-    observaciones VARCHAR(500),
-    PRIMARY KEY (id_animal, id_cuidado)
+    fecha_reg TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    foto VARCHAR(255)
 );
 
 -- ================================================================
 -- 6. IDENTIFICACIÓN
 -- ================================================================
-
 CREATE TABLE paw_rescue.ident_animal (
     id_ident SERIAL PRIMARY KEY,
     id_animal INT UNIQUE REFERENCES paw_rescue.animal(id_animal),
@@ -176,59 +217,66 @@ CREATE TABLE paw_rescue.ident_animal (
 );
 
 -- ================================================================
--- 7. RESCATE Y EVENTOS
+-- 7. RESCATE Y REPORTES
 -- ================================================================
+CREATE TABLE paw_rescue.estatus_reporte (
+    id_estatus SERIAL PRIMARY KEY,
+    nombre VARCHAR(50)
+);
+
+INSERT INTO paw_rescue.estatus_reporte (nombre)
+VALUES ('No encontrado'), ('No rescatado'), ('Rescatado');
+
+CREATE TABLE paw_rescue.reporte_animal (
+    id_reporte SERIAL PRIMARY KEY,
+    nombre VARCHAR(120),
+    situacion VARCHAR(50),
+    herido VARCHAR(2) CHECK (herido IN ('SI','NO')),
+    descripcion_heridas VARCHAR(500),
+    descripcion VARCHAR(1000),
+    ubicacion VARCHAR(255),
+    foto VARCHAR(255),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_usuario INT REFERENCES paw_rescue.usuario(id_usuario),
+    id_estatus INT REFERENCES paw_rescue.estatus_reporte(id_estatus)
+);
 
 CREATE TABLE paw_rescue.rescate (
     id_rescate SERIAL PRIMARY KEY,
-    id_animal INT REFERENCES paw_rescue.animal(id_animal),
-    fecha DATE,
-    lugar VARCHAR(255),
-    id_usuario INT REFERENCES paw_rescue.usuario(id_usuario),
-    condiciones VARCHAR(1000)
-);
+    id_animal INT NOT NULL
+        REFERENCES paw_rescue.animal(id_animal)
+        ON DELETE CASCADE,
 
-CREATE TABLE paw_rescue.evento_animal (
-    id_evento SERIAL PRIMARY KEY,
-    id_animal INT REFERENCES paw_rescue.animal(id_animal),
-    tipo VARCHAR(50),
-    descripcion VARCHAR(1000),
-    fecha DATE
-);
+    fecha DATE NOT NULL,
 
-CREATE TABLE paw_rescue.hist_estado (
-    id_hist SERIAL PRIMARY KEY,
-    id_animal INT REFERENCES paw_rescue.animal(id_animal),
-    id_estado INT REFERENCES paw_rescue.estado_animal(id_estado),
-    fecha DATE,
-    obs VARCHAR(1000)
+    lugar VARCHAR(255) NOT NULL,
+
+    municipio VARCHAR(100) NOT NULL,
+
+    codigo_postal CHAR(5),
+    asentamiento_id INTEGER,
+
+    FOREIGN KEY (codigo_postal, asentamiento_id)
+        REFERENCES paw_rescue.sepomex (codigo_postal, asentamiento_id)
 );
 
 -- ================================================================
 -- 8. SALUD
 -- ================================================================
-
 CREATE TABLE paw_rescue.enfermedad (
     id_enf SERIAL PRIMARY KEY,
-    nombre VARCHAR(150) NOT NULL
+    nombre VARCHAR(150)
 );
 
 CREATE TABLE paw_rescue.vacuna (
     id_vac SERIAL PRIMARY KEY,
-    nombre VARCHAR(150) NOT NULL,
+    nombre VARCHAR(150),
     esencial BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE paw_rescue.via_admin (
     id_via SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE paw_rescue.enf_animal (
-    id_animal INT REFERENCES paw_rescue.animal(id_animal),
-    id_enf INT REFERENCES paw_rescue.enfermedad(id_enf),
-    fecha DATE,
-    PRIMARY KEY (id_animal, id_enf)
+    nombre VARCHAR(50)
 );
 
 CREATE TABLE paw_rescue.hist_vac (
@@ -242,19 +290,9 @@ CREATE TABLE paw_rescue.hist_vac (
     obs VARCHAR(1000)
 );
 
-CREATE TABLE paw_rescue.salud_actual (
-    id_salud SERIAL PRIMARY KEY,
-    id_animal INT UNIQUE REFERENCES paw_rescue.animal(id_animal),
-    enfermo BOOLEAN DEFAULT FALSE,
-    diagnostico VARCHAR(1000),
-    obs VARCHAR(1000),
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- ================================================================
 -- 9. ADOPCIÓN
 -- ================================================================
-
 CREATE TABLE paw_rescue.adopcion (
     id_animal INT REFERENCES paw_rescue.animal(id_animal),
     id_usuario INT REFERENCES paw_rescue.adoptante(id_usuario),
@@ -262,116 +300,198 @@ CREATE TABLE paw_rescue.adopcion (
     PRIMARY KEY (id_animal, id_usuario)
 );
 
--- ================================================================
--- 10. CUESTIONARIO
--- ================================================================
-
-CREATE TABLE paw_rescue.tipo_vivienda (
-    id_tipo SERIAL PRIMARY KEY,
-    nombre VARCHAR(30) NOT NULL
-);
-
-CREATE TABLE paw_rescue.estado_cuestionario (
-    id_estado SERIAL PRIMARY KEY,
-    nombre VARCHAR(30) NOT NULL
-);
-
-CREATE TABLE paw_rescue.motivo_adopcion (
-    id_motivo SERIAL PRIMARY KEY,
-    descripcion VARCHAR(80) NOT NULL
-);
-
 CREATE TABLE paw_rescue.cuestionario_adopcion (
     id_cuestionario SERIAL PRIMARY KEY,
     id_usuario INT REFERENCES paw_rescue.usuario(id_usuario),
-    curp CHAR(18) NOT NULL,
-    id_tipo_vivienda INT REFERENCES paw_rescue.tipo_vivienda(id_tipo),
-    nivel_economico VARCHAR(30),
-    permiso_renta BOOLEAN,
-    comprobante_domicilio BOOLEAN,
-    espacio_adecuado BOOLEAN,
-    protecciones BOOLEAN,
-    convivencia_ninos BOOLEAN,
-    acepta_visitas BOOLEAN,
-    acepta_esterilizacion BOOLEAN,
-    compromiso_largo_plazo BOOLEAN,
-    gastos_veterinarios BOOLEAN,
-    id_motivo INT REFERENCES paw_rescue.motivo_adopcion(id_motivo),
-    id_estado INT REFERENCES paw_rescue.estado_cuestionario(id_estado),
-    observaciones VARCHAR(1000),
+
+    -- ================= IDENTIFICACIÓN =================
+    curp VARCHAR(18),
+
+    -- ================= DOMICILIO =================
+    codigo_postal CHAR(5),
+    asentamiento_id INT,
+    calle VARCHAR(150),
+
+    -- ================= ECONOMÍA / TIEMPO =================
+    ingresos SMALLINT,               -- 1 a 4
+    tiempo_dedicado SMALLINT,         -- 1 a 3
+    personalidad VARCHAR(50),         -- Tranquila / Activa / Muy activa
+
+    -- ================= PREFERENCIAS DE MASCOTA =================
+    preferencia_especie VARCHAR(20),  -- Perro / Gato / Ambos
+    nivel_actividad VARCHAR(20),      -- Tranquilo / Moderado / Activo
+
+    -- ================= VIVIENDA =================
+    tipo_vivienda VARCHAR(30),        -- Departamento / Casa chica / Casa amplia
+    tiene_patio VARCHAR(5),           -- Si / No
+
+    -- ================= MOTIVACIÓN =================
+    motivo_adopcion TEXT,
+
+    -- ================= CONVIVENCIA =================
+    convivientes TEXT,                -- Adultos, Niños, Otras mascotas...
+    total_personas SMALLINT,
+    acuerdo_familiar VARCHAR(20),     -- Si / No / Parcial
+
+    -- ================= EXPERIENCIA =================
+    experiencia_previa VARCHAR(5),    -- Si / No
+    destino_mascota VARCHAR(50),
+
+    -- ================= RUTINA =================
+    cuidador VARCHAR(50),
+    frecuencia_viajes VARCHAR(50),
+
+    -- ================= RESPONSABILIDAD =================
+    conoce_costos VARCHAR(5),         -- Si / No
+    gasto_mensual VARCHAR(50),
+
+    respuesta_enfermedad VARCHAR(50),
+    respuesta_danos VARCHAR(50),
+    acepta_contrato VARCHAR(5),
+
+    -- ================= PREVENCIÓN ABANDONO =================
+    plan_emergencia TEXT,
+    plan_largo_plazo TEXT,
+
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ================================================================
--- 11. VISITAS
--- ================================================================
 
-CREATE TABLE paw_rescue.visita_albergue (
-    id_visita SERIAL PRIMARY KEY,
-    id_usuario INT REFERENCES paw_rescue.usuario(id_usuario),
-    id_ref INT REFERENCES paw_rescue.refugio(id_ref),
+CREATE TABLE paw_rescue.estatus_proceso_adopcion (
+    id_estatus SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL
+);
+
+INSERT INTO paw_rescue.estatus_proceso_adopcion (nombre) VALUES
+('En revisión'),
+('Apto'),
+('No apto'),
+('Visita programada'),
+('Periodo de prueba'),
+('Aprobada'),
+('Denegada'),
+('Cancelada');
+
+CREATE TABLE paw_rescue.solicitud_adopcion (
+    id_solicitud SERIAL PRIMARY KEY,
+
+    id_usuario INT NOT NULL
+        REFERENCES paw_rescue.usuario(id_usuario),
+
+    id_animal INT NOT NULL
+        REFERENCES paw_rescue.animal(id_animal),
+
+    id_estatus INT NOT NULL
+        REFERENCES paw_rescue.estatus_proceso_adopcion(id_estatus),
+
+    fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Evaluación
+    es_candidato BOOLEAN,
+    observaciones TEXT,
+
+    -- Visita
+    fecha_visita DATE,
+
+    -- Resultado
+    aprobada BOOLEAN,
+    motivo_denegacion TEXT,
+
+    -- Periodo de prueba
+    fecha_inicio_prueba DATE,
+    fecha_fin_prueba DATE,
+
+    CONSTRAINT uq_solicitud_unica
+        UNIQUE (id_usuario, id_animal)
+);
+
+
+CREATE TABLE paw_rescue.compatibilidad_adopcion (
+    id_compat SERIAL PRIMARY KEY,
+
+    id_usuario INT
+        REFERENCES paw_rescue.usuario(id_usuario),
+
+    id_animal INT
+        REFERENCES paw_rescue.animal(id_animal),
+
+    nivel_compatibilidad SMALLINT CHECK (nivel_compatibilidad BETWEEN 1 AND 100),
+
+    observaciones TEXT,
+
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE paw_rescue.tipo_cita (
+    id_tipo SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL
+);
+
+INSERT INTO paw_rescue.tipo_cita (nombre) VALUES
+('Conocer a la mascota'),
+('Entrevista en persona'),
+('Visita domiciliaria'),
+('Entrega de mascota');
+
+
+CREATE TABLE paw_rescue.estatus_cita (
+    id_estatus SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL
+);
+
+INSERT INTO paw_rescue.estatus_cita (nombre) VALUES
+('Programada'),
+('Confirmada'),
+('Realizada'),
+('Cancelada'),
+('No asistió');
+
+
+CREATE TABLE paw_rescue.cita_adopcion (
+    id_cita SERIAL PRIMARY KEY,
+
+    id_solicitud INT NOT NULL
+        REFERENCES paw_rescue.solicitud_adopcion(id_solicitud)
+        ON DELETE CASCADE,
+
+    id_tipo INT NOT NULL
+        REFERENCES paw_rescue.tipo_cita(id_tipo),
+
+    id_estatus INT NOT NULL
+        REFERENCES paw_rescue.estatus_cita(id_estatus),
+
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
-    estado VARCHAR(30)
+
+    observaciones TEXT,
+    creada_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE paw_rescue.seguimiento_adopcion (
+    id_seguimiento SERIAL PRIMARY KEY,
+    id_solicitud INT NOT NULL REFERENCES paw_rescue.solicitud_adopcion(id_solicitud),
+
+    id_tipo_cita INT NOT NULL REFERENCES paw_rescue.tipo_cita(id_tipo),
+    id_estatus_cita INT NOT NULL REFERENCES paw_rescue.estatus_cita(id_estatus),
+
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+
+    es_candidato BOOLEAN,
+    fecha_inicio_prueba DATE,
+    fecha_fin_prueba DATE,
+    aprobada BOOLEAN,
+
+    observaciones TEXT
+);
+
 
 -- ================================================================
--- 12. COLABORADORES
+-- 10. ADMIN INICIAL
 -- ================================================================
-
-CREATE TABLE paw_rescue.colaborador (
-    id_usuario INT PRIMARY KEY REFERENCES paw_rescue.usuario(id_usuario),
-    puesto VARCHAR(50),
-    fecha_ingreso DATE,
-    activo BOOLEAN DEFAULT TRUE
-);
-
-CREATE TABLE paw_rescue.asistencia_colaborador (
-    id_asistencia SERIAL PRIMARY KEY,
-    id_usuario INT REFERENCES paw_rescue.colaborador(id_usuario),
-    fecha DATE,
-    hora_entrada TIME,
-    hora_salida TIME
-);
-
-CREATE TABLE paw_rescue.colaborador_refugio (
-    id_usuario INT REFERENCES paw_rescue.colaborador(id_usuario),
-    id_ref INT REFERENCES paw_rescue.refugio(id_ref),
-    fecha_inicio DATE,
-    fecha_fin DATE,
-    PRIMARY KEY (id_usuario, id_ref)
-);
-
--- ================================================================
--- 13. LISTA NEGRA Y RETIROS
--- ================================================================
-
-CREATE TABLE paw_rescue.lista_negra (
-    id_persona SERIAL PRIMARY KEY,
-    nombre VARCHAR(150),
-    primer_apellido VARCHAR(150),
-    segundo_apellido VARCHAR(150),
-    curp CHAR(18),
-    motivo VARCHAR(500),
-    fecha DATE DEFAULT CURRENT_DATE
-);
-
-CREATE TABLE paw_rescue.retiro_mascota (
-    id_retiro SERIAL PRIMARY KEY,
-    id_animal INT REFERENCES paw_rescue.animal(id_animal),
-    id_persona INT REFERENCES paw_rescue.lista_negra(id_persona),
-    fecha DATE DEFAULT CURRENT_DATE,
-    motivo VARCHAR(500)
-);
-
--- ================================================================
--- ADMIN INICIAL
--- ==========================================
-
 INSERT INTO paw_rescue.admin (clave, password, nombre)
 VALUES (
     'paw_admin',
-    'paw10',
+    '$2y$10$sEKRNOL8A8EDsD5RURta../KF0fWGWBcG.BsV0iPBb3DphfTRFcnS',
     'Saul Martinez'
 );
-

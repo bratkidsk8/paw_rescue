@@ -21,10 +21,6 @@ session_start();
     </head>
     <body>
 
-        <!-- Navbar -->
-         <?php include 'navbar.php'; ?>
-
-
         <div class="principal">
             <div class="div_tel">
                 <div class="contc">

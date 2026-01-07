@@ -9,14 +9,25 @@ if (!isset($_SESSION['id_usuario'])) {
 
 $id_usuario = $_SESSION['id_usuario'];
 
-$sql = "SELECT 1 FROM paw_rescue.cuestionario_adopcion WHERE id_usuario = $1";
+$sql = "
+    SELECT id_cuestionario
+    FROM paw_rescue.cuestionario_adopcion
+    WHERE id_usuario = $1
+    LIMIT 1
+";
+
 $res = pg_query_params($conexion, $sql, [$id_usuario]);
+
+if (!$res) {
+    die("Error en consulta de cuestionario: " . pg_last_error($conexion));
+}
 
 if (pg_num_rows($res) > 0) {
     header("Location: cuestionarioEnviado.php");
     exit;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -137,6 +148,40 @@ if (pg_num_rows($res) > 0) {
   <option value="No">No</option>
   <option value="Parcial">Parcial</option>
 </select>
+
+<h5 class="mt-4 mb-3">Preferencia de mascota</h5>
+<select name="preferencia_especie" class="form-select mb-4" required>
+  <option value="">¿Qué deseas adoptar?</option>
+  <option value="Perro">Perro</option>
+  <option value="Gato">Gato</option>
+  <option value="Ambos">Ambos</option>
+</select>
+
+<h5 class="mt-4 mb-3">Tipo de vivienda</h5>
+<select name="tipo_vivienda" class="form-select mb-4" required>
+  <option value="">Selecciona</option>
+  <option value="Departamento">Departamento</option>
+  <option value="Casa chica">Casa chica</option>
+  <option value="Casa amplia">Casa amplia</option>
+</select>
+
+<select name="tiene_patio" class="form-select mb-4" required>
+  <option value="">¿Cuenta con patio o jardín?</option>
+  <option value="Si">Sí</option>
+  <option value="No">No</option>
+</select>
+
+<h5 class="mt-4 mb-3">Nivel de actividad esperado</h5>
+<select name="nivel_actividad" class="form-select mb-4" required>
+  <option value="">Seleccione</option>
+  <option value="Tranquilo">Tranquilo</option>
+  <option value="Moderado">Moderado</option>
+  <option value="Activo">Activo</option>
+</select>
+
+
+
+
 
 <!-- ================= EXPERIENCIA ================= -->
 <h5 class="mt-4 mb-3">Experiencia con Mascotas</h5>

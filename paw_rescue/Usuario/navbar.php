@@ -33,6 +33,7 @@ if (session_status() === PHP_SESSION_NONE) {
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="adoptar.php">Ver mascotas</a></li>
             <li><a class="dropdown-item" href="cuestionario.php">Cuestionario</a></li>
+            <li><a class="dropdown-item" href="procesoAdopcion.php">Mi proceso de adopcion</a></li>
           </ul>
         </li>
 
