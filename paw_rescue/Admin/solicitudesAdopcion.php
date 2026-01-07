@@ -47,10 +47,6 @@ if (!$res) {
 </head>
 <body>
 <?php include("navbar.php"); ?>
-
-
-<?php include("navbar_admin.php"); ?>
-
 <div class="container mt-5">
 
 <h2 class="mb-4">📋 Solicitudes de adopción</h2>
