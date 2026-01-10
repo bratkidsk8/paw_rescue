@@ -1,12 +1,14 @@
 <?php
+session_start();
 include("../conexion.php");
 
-if (!isset($_GET['id_usuario'])) {
-    die("Usuario no válido");
+if (!isset($_SESSION['id_usuario'])) {
+    die("Sesión no válida");
 }
 
-$idUsuario   = (int)$_GET['id_usuario'];
+$idUsuario = $_SESSION['id_usuario'];
 $idSolicitud = $_GET['id_solicitud'] ?? null;
+
 
 $sql = "
 SELECT *

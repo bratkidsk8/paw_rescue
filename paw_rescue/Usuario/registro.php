@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $mensaje = "Todos los campos obligatorios son requeridos";
     } else {
 
-        /* ===== VERIFICAR CORREO ===== */
+        /*  VERIFICAR CORREO  */
         $check = pg_query_params(
             $conexion,
             "SELECT 1 FROM paw_rescue.usuario WHERE correo = $1",
@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $password = password_hash($password_raw, PASSWORD_BCRYPT);
 
-            /* ===== INSERT USUARIO ===== */
+            /*  INSERT USUARIO */
             $sql = "
             INSERT INTO paw_rescue.usuario
             (nombre, primer_apellido, segundo_apellido, correo, password, fecha_nacimiento)
@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 $id_usuario = pg_fetch_result($result, 0, 'id_usuario');
 
-                /* ===== ASIGNAR ROL USUARIO (id_rol = 1) ===== */
+                /*  ASIGNAR ROL USUARIO (id_rol = 1)  */
                 pg_query_params(
                     $conexion,
                     "INSERT INTO paw_rescue.usuario_rol (id_usuario, id_rol)

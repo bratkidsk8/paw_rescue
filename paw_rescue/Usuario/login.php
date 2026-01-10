@@ -4,7 +4,6 @@ include("../../paw_rescue/conexion.php");
 
 $mensaje = "";
 
-/* ===== MENSAJE REGISTRO OK ===== */
 $registro_ok = isset($_GET['registro']) && $_GET['registro'] === 'ok';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -42,13 +41,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $mensaje = "❌ Correo o contraseña incorrectos";
             } else {
 
-                /* ===== CREAR SESIÓN ===== */
                 $_SESSION["id_usuario"] = $usuario["id_usuario"];
                 $_SESSION["nombre"]     = $usuario["nombre"];
                 $_SESSION["correo"]     = $usuario["correo"];
                 $_SESSION["rol"]        = $usuario["rol"];
 
-                /* ===== REDIRECCIÓN ===== */
                 header("Location: index.php");
                 exit;
             }
@@ -73,8 +70,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!-- ================= NAVBAR ================= -->
 <?php include 'navbar.php'; ?>
 
-
-<!-- ================= LOGIN ================= -->
 <div class="container mt-5">
   <div class="card shadow p-4 mx-auto" style="max-width: 400px;">
 

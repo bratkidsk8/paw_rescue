@@ -30,7 +30,9 @@ SELECT
 FROM animal a
 JOIN raza r ON a.id_raza = r.id_raza
 JOIN especie e ON a.id_esp = e.id_esp
-$filtro
+JOIN estatus_adop ea ON ea.id_estatus = a.id_estatus
+WHERE LOWER(ea.nombre) <> 'adoptado'
+" . ($filtro ? " AND " . substr($filtro, 6) : "") . "
 GROUP BY r.id_raza, r.nombre, e.nombre
 ORDER BY r.nombre
 ";

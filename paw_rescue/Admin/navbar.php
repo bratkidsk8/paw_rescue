@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
@@ -27,7 +30,8 @@ $nombreAdmin = $_SESSION['admin_nombre'] ?? 'Admin';
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav me-3">
 
-        <li class="nav-item"><a class="nav-link" href="info.php">Peticiones</a></li>
+        <li class="nav-item"><a class="nav-link" href="listaNegra.php">lista negra</a></li>
+        <li class="nav-item"><a class="nav-link" href="Personal.php">Personal</a></li>
         <li class="nav-item"><a class="nav-link" href="solicitudesAdopcion.php">proceso de adopcion</a></li>
         <li class="nav-item"><a class="nav-link" href="agregarMascota.php">Agregar mascotas</a></li>
         <li class="nav-item"><a class="nav-link" href="reporte.php">Reportes</a></li>

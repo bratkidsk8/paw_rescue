@@ -42,7 +42,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <li class="nav-item"><a class="nav-link" href="contacto.php">Contacto</a></li>
       </ul>
 
-      <!-- ===== SESIÓN ===== -->
+      <!-- ------ SESIÓN ------ -->
       <?php if (isset($_SESSION['id_usuario'])): ?>
 
         <div class="dropdown ms-3">

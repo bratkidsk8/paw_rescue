@@ -107,50 +107,83 @@ while ($c = pg_fetch_assoc($resCitas)) {
 </div>
 
 <!-- ================= FASE 2 ================= -->
+<!-- ================= FASE 2 ================= -->
 <div class="card mb-4 border-info">
 <div class="card-header fw-bold">FASE 2 · Visitas</div>
 <div class="card-body">
 
 <?php if (count($visitas) == 0): ?>
-<p>No hay visitas.</p>
+    <p>No hay visitas.</p>
 <?php else: ?>
-<table class="table table-bordered">
+
+<table class="table table-bordered align-middle">
+<thead>
 <tr>
-<th>Tipo</th><th>Fecha</th><th>Hora</th><th>Estatus</th><th>Acción</th>
+    <th>Tipo</th>
+    <th>Fecha</th>
+    <th>Hora</th>
+    <th>Estatus</th>
+    <th>Acción</th>
 </tr>
+</thead>
+<tbody>
+
 <?php foreach ($visitas as $v): ?>
 <tr>
-<td><?= $v['tipo_cita'] ?></td>
-<td><?= $v['fecha'] ?></td>
-<td><?= $v['hora'] ?></td>
-<td><?= $v['estatus_cita'] ?></td>
-<td>
-<?php if ($v['estatus_cita'] != 'Realizada'): ?>
-<form method="POST" action="marcarCitaRealizada.php">
-<input type="hidden" name="id_cita" value="<?= $v['id_cita'] ?>">
-<input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-<button class="btn btn-sm btn-success">Asistió</button>
-</form>
-<?php else: ?>✔<?php endif; ?>
-</td>
+    <td><?= htmlspecialchars($v['tipo_cita']) ?></td>
+    <td><?= $v['fecha'] ?></td>
+    <td><?= $v['hora'] ?></td>
+    <td><?= htmlspecialchars($v['estatus_cita']) ?></td>
+    <td>
+
+    <?php if ($v['estatus_cita'] !== 'Realizada'): ?>
+
+        <!-- ASISTIÓ -->
+        <form method="POST" action="marcarCitaRealizada.php" class="d-inline">
+            <input type="hidden" name="id_cita" value="<?= $v['id_cita'] ?>">
+            <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
+            <button class="btn btn-sm btn-success">
+                 Asistió
+            </button>
+        </form>
+
+        <!-- NO ASISTIÓ -->
+        <form method="POST" action="marcarNoAsistio.php" class="d-inline">
+            <input type="hidden" name="id_cita" value="<?= $v['id_cita'] ?>">
+            <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
+            <button class="btn btn-sm btn-danger"
+                onclick="return confirm('¿El solicitante NO asistió? Esto cancelará la solicitud.')">
+                 No asistió
+            </button>
+        </form>
+
+    <?php else: ?>
+        ✔
+    <?php endif; ?>
+
+    </td>
 </tr>
 <?php endforeach; ?>
+
+</tbody>
 </table>
 <?php endif; ?>
 
-<a href="programaCita.php?id=<?= $idSolicitud ?>" class="btn btn-outline-primary">
-➕ Programar visita
+<a href="programaCita.php?id=<?= $idSolicitud ?>" class="btn btn-outline-primary mt-2">
+ Programar visita
 </a>
 
 <form method="POST" action="avanzarPeriodoPrueba.php" class="mt-3">
-<input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-<button class="btn btn-warning">➡️ Avanzar a periodo de prueba</button>
+    <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
+    <button class="btn btn-warning">
+         Avanzar a periodo de prueba
+    </button>
 </form>
 
 </div>
 </div>
 
-<!-- ================= FASE 3 ================= -->
+
 <!-- ================= FASE 3 · PERIODO DE PRUEBA ================= -->
 <div class="card mb-4 border-warning">
 <div class="card-header fw-bold">FASE 3 · Periodo de prueba</div>
@@ -223,12 +256,13 @@ placeholder="Observaciones del periodo de prueba" required></textarea>
 
 <hr>
 
-<form method="POST" action="avanzarAFirma.php">
-<input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-<button class="btn btn-warning w-100">
-➡️ Avanzar a fase final (firma)
-</button>
+<form method="POST" action="finalizarAdopcion.php">
+    <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
+    <button class="btn btn-success w-100">
+        🐾 Confirmar adopción y firmar
+    </button>
 </form>
+
 
 </div>
 </div>

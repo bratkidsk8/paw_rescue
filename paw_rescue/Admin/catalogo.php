@@ -28,6 +28,15 @@ if (!empty($_GET['temperamento'])) {
     $where .= " AND a.id_temp = " . (int)$_GET['temperamento'];
 }
 
+if (!empty($_GET['estatus'])) {
+    $where .= " AND a.id_estatus = " . (int)$_GET['estatus'];
+}
+
+if (!empty($_GET['estado'])) {
+    $where .= " AND a.id_estado = " . (int)$_GET['estado'];
+}
+
+
 /* ===============================
    CONSULTA PRINCIPAL
 ================================ */
@@ -41,6 +50,7 @@ SELECT DISTINCT
     t.nombre AS tam,
     c.nombre AS color,
     temp.nombre AS temperamento,
+    es.nombre AS estatus,
     ea.nombre AS estado,
     COALESCE(a.foto, 'https://via.placeholder.com/300') AS imagen,
     CASE 
@@ -57,11 +67,12 @@ LEFT JOIN paw_rescue.raza r ON a.id_raza = r.id_raza
 LEFT JOIN paw_rescue.tam t ON a.id_tam = t.id_tam
 LEFT JOIN paw_rescue.color c ON a.id_color = c.id_color
 LEFT JOIN paw_rescue.temperamento temp ON a.id_temp = temp.id_temp
+JOIN paw_rescue.estatus_adop es ON a.id_estatus = es.id_estatus
 JOIN paw_rescue.estado_animal ea ON a.id_estado = ea.id_estado
 $where
-ORDER BY a.id_animal;
-
+ORDER BY a.id_animal
 ";
+
 
 $result = pg_query($conexion, $sql);
 if (!$result) {
@@ -117,6 +128,32 @@ if (!$result) {
   </div>
 
   <div class="col-md-2">
+  <select name="estatus" class="form-select">
+    <option value="">Estatus</option>
+    <?php
+    $q = pg_query($conexion, "SELECT id_estatus, nombre FROM paw_rescue.estatus_adop");
+    while ($row = pg_fetch_assoc($q)) {
+        echo "<option value='{$row['id_estatus']}'>{$row['nombre']}</option>";
+    }
+    ?>
+  </select>
+  </div>
+
+  <div class="col-md-2">
+  <select name="estado" class="form-select">
+    <option value="">Estado</option>
+    <?php
+    $q = pg_query($conexion, "SELECT id_estado, nombre FROM paw_rescue.estado_animal");
+    while ($row = pg_fetch_assoc($q)) {
+        echo "<option value='{$row['id_estado']}'>{$row['nombre']}</option>";
+    }
+    ?>
+  </select>
+</div>
+
+
+
+  <div class="col-md-2">
     <select name="color" class="form-select">
       <option value="">Color</option>
       <?php
@@ -165,21 +202,37 @@ if (!$result) {
 
     <img src="<?= $m['imagen'] ?>" class="card-img-top">
 
-    <div class="card-body">
-      <h5><?= $m['nombre'] ?></h5>
-      <p><?= $m['especie'] ?> · <?= $m['raza'] ?></p>
-      <p>Edad: <?= $m['edad_aprox'] ?> años</p>
-      <p>Tamaño: <?= $m['tam'] ?></p>
-      <p>Color: <?= $m['color'] ?></p>
-      <p>Temperamento: <?= $m['temperamento'] ?></p>
-      <p>Vacunado: <?= $m['vacunado'] ?></p>
+   <div class="card-body">
+  <h5><?= $m['nombre'] ?></h5>
 
-      <span class="badge bg-success"><?= $m['estado'] ?></span>
+  <p class="mb-1"><?= $m['especie'] ?> · <?= $m['raza'] ?></p>
+  <p class="mb-1">Edad: <?= $m['edad_aprox'] ?> años</p>
+  <p class="mb-1">Tamaño: <?= $m['tam'] ?></p>
+  <p class="mb-1">Color: <?= $m['color'] ?></p>
+  <p class="mb-1">Temperamento: <?= $m['temperamento'] ?></p>
+  <p class="mb-2">Vacunado: <?= $m['vacunado'] ?></p>
 
-      <a href="ficha.php?id=<?= $m['id_animal'] ?>" class="btn btn-dark w-100 mt-2">
-        Ver ficha
-      </a>
-    </div>
+  <p class="mb-1">
+    <strong>Estatus:</strong>
+    <span class="badge 
+      <?= $m['estatus'] == 'Disponible' ? 'bg-success' : 
+         ($m['estatus'] == 'En proceso' ? 'bg-warning text-dark' : 'bg-secondary') ?>">
+      <?= $m['estatus'] ?>
+    </span>
+  </p>
+
+  <p class="mb-2">
+    <strong>Estado:</strong>
+    <span class="badge bg-info text-dark">
+      <?= $m['estado'] ?>
+    </span>
+  </p>
+
+  <a href="ficha.php?id=<?= $m['id_animal'] ?>" class="btn btn-dark w-100">
+    Ver ficha
+  </a>
+</div>
+
 
   </div>
 </div>

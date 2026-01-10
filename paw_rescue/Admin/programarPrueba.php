@@ -1,6 +1,5 @@
 <?php
 include("../conexion.php");
-
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -10,113 +9,63 @@ if (!isset($_GET['id'])) {
 }
 $idSolicitud = (int)$_GET['id'];
 
+/* ================= OBTENER IDS NECESARIOS ================= */
+function obtenerId($conexion, $tabla, $campo, $valor) {
+    $sql = "SELECT $campo FROM paw_rescue.$tabla WHERE nombre = $1";
+    $res = pg_query_params($conexion, $sql, [$valor]);
+    if ($row = pg_fetch_assoc($res)) {
+        return (int)$row[$campo];
+    }
+    return null;
+}
+
+$idInicioPeriodo = obtenerId($conexion, 'tipo_cita', 'id_tipo', 'Inicio periodo de prueba');
+$idFinPeriodo    = obtenerId($conexion, 'tipo_cita', 'id_tipo', 'Fin periodo de prueba');
+$idSeguimiento   = obtenerId($conexion, 'tipo_cita', 'id_tipo', 'Visita de seguimiento');
+$idProgramada    = obtenerId($conexion, 'estatus_cita', 'id_estatus', 'Programada');
+
+if (!$idInicioPeriodo || !$idFinPeriodo || !$idSeguimiento || !$idProgramada) {
+    die("Error: tipos de cita o estatus no configurados");
+}
+
 /* ================= GUARDAR ================= */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $inicio_fecha = $_POST['inicio_fecha'];
     $inicio_hora  = $_POST['inicio_hora'];
 
-    /* === CALCULAR FIN (+15 DIAS) === */
-    $inicio = new DateTime($inicio_fecha . ' ' . $inicio_hora);
+    $inicio = new DateTime("$inicio_fecha $inicio_hora");
+
+    /* === FIN (+15 DÍAS) === */
     $fin = clone $inicio;
     $fin->modify('+15 days');
 
-    $fin_fecha = $fin->format('Y-m-d');
-    $fin_hora  = $fin->format('H:i');
+    /* === SEGUIMIENTO (+7 DÍAS) === */
+    $seguimiento = clone $inicio;
+    $seguimiento->modify('+7 days');
 
-    /* === INICIO PERIODO === */
-    $sqlInicio = "
-    INSERT INTO paw_rescue.cita_adopcion
-    (id_solicitud, id_tipo, fecha, hora, id_estatus)
-    VALUES ($1, 3, $2, $3, 1)
-    ";
-    pg_query_params($conexion, $sqlInicio, [
-        $idSolicitud,
-        $inicio_fecha,
-        $inicio_hora
-    ]);
+    /* === INSERT INICIO === */
+    pg_query_params($conexion, "
+        INSERT INTO paw_rescue.cita_adopcion
+        (id_solicitud, id_tipo, fecha, hora, id_estatus)
+        VALUES ($1, $2, $3, $4, $5)
+    ", [$idSolicitud, $idInicioPeriodo, $inicio->format('Y-m-d'), $inicio->format('H:i'), $idProgramada]);
 
-    /* === FIN PERIODO === */
-    $sqlFin = "
-    INSERT INTO paw_rescue.cita_adopcion
-    (id_solicitud, id_tipo, fecha, hora, id_estatus)
-    VALUES ($1, 4, $2, $3, 1)
-    ";
-    pg_query_params($conexion, $sqlFin, [
-        $idSolicitud,
-        $fin_fecha,
-        $fin_hora
-    ]);
-    /* === VISITA DE SEGUIMIENTO (+7 DIAS) === */
-        $visita = clone $inicio;
-        $visita->modify('+7 days');
+    /* === INSERT SEGUIMIENTO === */
+    pg_query_params($conexion, "
+        INSERT INTO paw_rescue.cita_adopcion
+        (id_solicitud, id_tipo, fecha, hora, id_estatus)
+        VALUES ($1, $2, $3, $4, $5)
+    ", [$idSolicitud, $idSeguimiento, $seguimiento->format('Y-m-d'), $seguimiento->format('H:i'), $idProgramada]);
 
-        $visita_fecha = $visita->format('Y-m-d');
-        $visita_hora  = $inicio->format('H:i');
-
-        /* === VISITA DE SEGUIMIENTO === */
-    $sqlVisita = "
-    INSERT INTO paw_rescue.cita_adopcion
-    (id_solicitud, id_tipo, fecha, hora, id_estatus)
-    VALUES ($1, 5, $2, $3, 1)
-    ";
-    pg_query_params($conexion, $sqlVisita, [
-        $idSolicitud,
-        $visita_fecha,
-        $visita_hora
-    ]);
-
-
-
-    
+    /* === INSERT FIN === */
+    pg_query_params($conexion, "
+        INSERT INTO paw_rescue.cita_adopcion
+        (id_solicitud, id_tipo, fecha, hora, id_estatus)
+        VALUES ($1, $2, $3, $4, $5)
+    ", [$idSolicitud, $idFinPeriodo, $fin->format('Y-m-d'), $fin->format('H:i'), $idProgramada]);
 
     header("Location: verSolicitud.php?id=$idSolicitud");
     exit;
 }
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Programar periodo de prueba</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-
-<?php include("navbar.php"); ?>
-
-<div class="container mt-4">
-
-<h3>Programar periodo de prueba (15 días)</h3>
-
-<form method="POST">
-
-<div class="row">
-<div class="col-md-6">
-<label class="form-label">Fecha inicio</label>
-<input type="date" name="inicio_fecha" class="form-control" required>
-</div>
-
-<div class="col-md-6">
-<label class="form-label">Hora inicio</label>
-<input type="time" name="inicio_hora" class="form-control" required>
-</div>
-</div>
-
-<div class="alert alert-info mt-3">
-📅 El periodo de prueba finalizará automáticamente <b>15 días después</b>.
-</div>
-
-<button class="btn btn-success mt-3">
-Guardar periodo de prueba
-</button>
-
-<a href="verSolicitud.php?id=<?= $idSolicitud ?>" class="btn btn-secondary mt-3">
-Cancelar
-</a>
-
-</form>
-
-</div>
-</body>
-</html>

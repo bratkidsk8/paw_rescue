@@ -1,74 +1,117 @@
 <?php
+session_start();
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 include("../conexion.php");
 
-/* ================= VALIDAR ID ================= */
-if (!isset($_POST['id_solicitud'])) {
-    die("Solicitud no válida");
+/* ===== VALIDAR ADMIN ===== */
+if (!isset($_SESSION['admin_id'])) {
+    die("Acceso denegado");
 }
 
-$idSolicitud = (int) $_POST['id_solicitud'];
+/* ===== VALIDAR ID ===== */
+if (!isset($_POST['id_solicitud'])) {
+    die("ID de solicitud faltante");
+}
 
-/* ================= OBTENER DATOS ================= */
+$idSolicitud = (int)$_POST['id_solicitud'];
+
+/* ===== TRANSACCIÓN ===== */
+pg_query($conexion, "BEGIN");
+
+/* ===== DATOS SOLICITUD ===== */
 $sql = "
-SELECT 
-    s.id_solicitud,
-    s.id_estatus,
-    s.id_animal
-FROM solicitud_adopcion s
-WHERE s.id_solicitud = $1
+SELECT id_usuario, id_animal
+FROM paw_rescue.solicitud_adopcion
+WHERE id_solicitud = $1
 ";
-
 $res = pg_query_params($conexion, $sql, [$idSolicitud]);
 
-if (!$res || pg_num_rows($res) === 0) {
-    die("Solicitud no encontrada");
+if (!$res) {
+    pg_query($conexion, "ROLLBACK");
+    die(pg_last_error($conexion));
+}
+
+if (pg_num_rows($res) === 0) {
+    pg_query($conexion, "ROLLBACK");
+    die("Solicitud inexistente");
 }
 
 $data = pg_fetch_assoc($res);
+$idUsuario = (int)$data['id_usuario'];
+$idAnimal  = (int)$data['id_animal'];
 
-/* ================= VALIDAR FASE ================= */
-if ((int)$data['id_estatus'] !== 4) {
-    die("La solicitud no está en fase de firma");
-}
-
-$idAnimal = (int)$data['id_animal'];
-
-pg_query($conexion, "BEGIN");
-
-/* ================= ACTUALIZAR CITA ================= */
-$sqlCita = "
-UPDATE cita_adopcion
-SET estatus_cita = 'Realizada'
-WHERE id_solicitud = $1
-AND tipo_cita = 'Firma de adopción'
+/* ===== OBTENER ESTATUS ADOPTADO ===== */
+$sqlEstatus = "
+SELECT id_estatus
+FROM paw_rescue.estatus_adop
+WHERE LOWER(nombre) = 'adoptado'
+LIMIT 1
 ";
+$resEstatus = pg_query($conexion, $sqlEstatus);
 
-$resCita = pg_query_params($conexion, $sqlCita, [$idSolicitud]);
-
-/* ================= ACTUALIZAR SOLICITUD ================= */
-$sqlSolicitud = "
-UPDATE solicitud_adopcion
-SET id_estatus = 5
-WHERE id_solicitud = $1
-";
-
-$resSolicitud = pg_query_params($conexion, $sqlSolicitud, [$idSolicitud]);
-
-/* ================= ACTUALIZAR MASCOTA ================= */
-$sqlMascota = "
-UPDATE animal
-SET estatus = 'Adoptada'
-WHERE id_animal = $1
-";
-
-$resMascota = pg_query_params($conexion, $sqlMascota, [$idAnimal]);
-
-/* ================= COMMIT / ROLLBACK ================= */
-if ($resCita && $resSolicitud && $resMascota) {
-    pg_query($conexion, "COMMIT");
-    header("Location: verSolicitud.php?id=$idSolicitud&ok=adopcion");
-    exit;
-} else {
+if (!$resEstatus) {
     pg_query($conexion, "ROLLBACK");
-    die("Error al finalizar adopción");
+    die(pg_last_error($conexion));
 }
+
+$idEstatusAdoptado = (int)pg_fetch_result($resEstatus, 0, 'id_estatus');
+
+/* ===== ACTUALIZAR ANIMAL ===== */
+$sqlAnimal = "
+UPDATE paw_rescue.animal
+SET id_estatus = $1
+WHERE id_animal = $2
+";
+$resAnimal = pg_query_params($conexion, $sqlAnimal, [
+    $idEstatusAdoptado,
+    $idAnimal
+]);
+
+if (!$resAnimal) {
+    pg_query($conexion, "ROLLBACK");
+    die(pg_last_error($conexion));
+}
+
+/* ===== REGISTRAR ADOPCIÓN ===== */
+$sqlAdopcion = "
+INSERT INTO paw_rescue.adopcion (id_animal, id_usuario, fecha)
+VALUES ($1, $2, CURRENT_DATE)
+";
+$resAdop = pg_query_params($conexion, $sqlAdopcion, [
+    $idAnimal,
+    $idUsuario
+]);
+
+if (!$resAdop) {
+    pg_query($conexion, "ROLLBACK");
+    die(pg_last_error($conexion));
+}
+
+/* ===== ACTUALIZAR SOLICITUD ===== */
+$sqlSolicitud = "
+UPDATE paw_rescue.solicitud_adopcion
+SET
+    id_estatus = (
+        SELECT id_estatus
+        FROM paw_rescue.estatus_proceso_adopcion
+        WHERE LOWER(nombre) = 'aprobada'
+        LIMIT 1
+    ),
+    aprobada = TRUE
+WHERE id_solicitud = $1
+";
+$resSol = pg_query_params($conexion, $sqlSolicitud, [$idSolicitud]);
+
+if (!$resSol) {
+    pg_query($conexion, "ROLLBACK");
+    die(pg_last_error($conexion));
+}
+
+/* ===== CONFIRMAR ===== */
+pg_query($conexion, "COMMIT");
+
+echo "✅ Adopción finalizada correctamente";

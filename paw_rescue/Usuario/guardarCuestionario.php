@@ -101,6 +101,36 @@ if (!$res) {
     die("❌ Error BD: " . pg_last_error($conexion));
 }
 
+
+// ===============================
+// CALCULAR COMPATIBILIDAD
+// ===============================
+
+$idUsuario = $_SESSION['id_usuario'];
+
+/* 1️⃣ Borrar compatibilidades anteriores */
+pg_query_params(
+    $conexion,
+    "DELETE FROM paw_rescue.compatibilidad_adopcion WHERE id_usuario = $1",
+    [$idUsuario]
+);
+
+/* 2️⃣ Crear compatibilidad con mascotas disponibles */
+$sqlCompat = "
+INSERT INTO paw_rescue.compatibilidad_adopcion
+(id_usuario, id_animal, nivel_compatibilidad, observaciones)
+SELECT
+    $1,
+    a.id_animal,
+    (RANDOM() * 30 + 70)::INT,
+    'Compatibilidad generada tras cuestionario'
+FROM paw_rescue.animal a
+JOIN paw_rescue.estatus_adop ea ON ea.id_estatus = a.id_estatus
+WHERE ea.nombre = 'Disponible'
+";
+
+pg_query_params($conexion, $sqlCompat, [$idUsuario]);
+
 /* ================= REDIRECCIÓN ================= */
 header("Location: gracias.php");
 exit;
