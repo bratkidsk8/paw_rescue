@@ -1,0 +1,12 @@
+.div_consulta{
+    display: flex;
+    flex-direction: row;
+}
+
+.cons_cont{
+    flex: 3;
+}
+
+.img_cons{
+    flex: 1;
+}

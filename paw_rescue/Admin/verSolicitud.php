@@ -1,61 +1,40 @@
 <?php
+session_start();
 include("../conexion.php");
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 
-/* ===== VALIDAR ID ===== */
-if (!isset($_GET['id'])) {
-    die("Solicitud no válida");
+/* ===============================
+   VALIDAR ADMIN
+================================= */
+if (!isset($_SESSION['admin_id'])) {
+    header("Location: login.php");
+    exit;
 }
-$idSolicitud = (int)$_GET['id'];
 
-/* ===== DATOS PRINCIPALES ===== */
+/* ===============================
+   OBTENER SOLICITUDES
+================================= */
 $sql = "
-SELECT s.id_solicitud, s.id_estatus, ep.nombre AS estatus_proceso,
-       u.nombre, u.primer_apellido, u.segundo_apellido,
-       a.nombre AS mascota
+SELECT
+    s.id_solicitud,
+    u.id_usuario,
+    u.nombre || ' ' || u.primer_apellido AS solicitante,
+    a.nombre AS mascota,
+    ep.nombre AS estatus_proceso,
+    s.fecha_solicitud
 FROM paw_rescue.solicitud_adopcion s
-JOIN paw_rescue.usuario u ON s.id_usuario = u.id_usuario
-JOIN paw_rescue.animal a ON s.id_animal = a.id_animal
-JOIN paw_rescue.estatus_proceso_adopcion ep ON ep.id_estatus = s.id_estatus
-WHERE s.id_solicitud = $1
+JOIN paw_rescue.usuario u 
+    ON u.id_usuario = s.id_usuario
+JOIN paw_rescue.animal a 
+    ON a.id_animal = s.id_animal
+JOIN paw_rescue.estatus_proceso_adopcion ep 
+    ON ep.id_estatus = s.id_estatus
+ORDER BY s.fecha_solicitud DESC
 ";
-$res = pg_query_params($conexion, $sql, [$idSolicitud]);
-$data = pg_fetch_assoc($res);
-$idEstatus = (int)$data['id_estatus'];
 
-/* ===== CITAS ===== */
-$sqlCitas = "
-SELECT ca.id_cita, ca.fecha, ca.hora,
-       tc.nombre AS tipo_cita, ec.nombre AS estatus_cita
-FROM paw_rescue.cita_adopcion ca
-JOIN paw_rescue.tipo_cita tc ON tc.id_tipo = ca.id_tipo
-JOIN paw_rescue.estatus_cita ec ON ec.id_estatus = ca.id_estatus
-WHERE ca.id_solicitud = $1
-ORDER BY ca.fecha
-";
-$resCitas = pg_query_params($conexion, $sqlCitas, [$idSolicitud]);
+$res = pg_query($conexion, $sql);
 
-$visitas = [];
-$firma = [];
-$inicioPrueba = null;
-$finPrueba = null;
-$visitaSeguimiento = null;
-
-while ($c = pg_fetch_assoc($resCitas)) {
-    $tipo = strtolower($c['tipo_cita']);
-
-    if (strpos($tipo, 'firma') !== false) {
-        $firma[] = $c;
-    } elseif (strpos($tipo, 'inicio') !== false) {
-        $inicioPrueba = $c;
-    } elseif (strpos($tipo, 'fin') !== false) {
-        $finPrueba = $c;
-    } elseif (strpos($tipo, 'seguimiento') !== false) {
-        $visitaSeguimiento = $c;
-    } else {
-        $visitas[] = $c;
-    }
+if (!$res) {
+    die("Error al obtener solicitudes: " . pg_last_error($conexion));
 }
 ?>
 
@@ -63,206 +42,62 @@ while ($c = pg_fetch_assoc($resCitas)) {
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Detalle solicitud</title>
+<title>Solicitudes de adopción</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 
-<?php include("navbar.php"); ?>
+<?php include("navbar_admin.php"); ?>
 
-<div class="container mt-4">
+<div class="container mt-5">
 
-<h3>Solicitud de adopción</h3>
+<h2 class="mb-4">📋 Solicitudes de adopción</h2>
 
-<div class="card mb-3">
-<div class="card-body">
-<b>Solicitante:</b> <?= $data['nombre']." ".$data['primer_apellido']." ".$data['segundo_apellido'] ?><br>
-<b>Mascota:</b> <?= $data['mascota'] ?><br>
-<b>Estatus:</b> <?= $data['estatus_proceso'] ?><br><br>
+<?php if (pg_num_rows($res) > 0): ?>
 
-<a href="verCuestionario.php?id=<?= $idSolicitud ?>" class="btn btn-outline-secondary btn-sm">
-📄 Ver cuestionario
-</a>
-</div>
-</div>
-
-<!-- ================= FASE 1 ================= -->
-<div class="card mb-4 border-primary">
-<div class="card-header fw-bold">FASE 1 · Evaluación inicial</div>
-<div class="card-body">
-
-<?php if ($idEstatus == 1): ?>
-<form method="POST" action="evaluarSolicitud.php">
-<input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-<input type="radio" name="resultado" value="apto" required> Apto<br>
-<input type="radio" name="resultado" value="no_apto"> No apto<br>
-<textarea name="observaciones" class="form-control mt-2" required></textarea>
-<button class="btn btn-success mt-3">Guardar y avanzar</button>
-</form>
-<?php else: ?>
-<p class="text-muted">✔ Evaluación completada</p>
-<?php endif; ?>
-
-</div>
-</div>
-
-<!-- ================= FASE 2 ================= -->
-<!-- ================= FASE 2 ================= -->
-<div class="card mb-4 border-info">
-<div class="card-header fw-bold">FASE 2 · Visitas</div>
-<div class="card-body">
-
-<?php if (count($visitas) == 0): ?>
-    <p>No hay visitas.</p>
-<?php else: ?>
-
-<table class="table table-bordered align-middle">
-<thead>
-<tr>
-    <th>Tipo</th>
-    <th>Fecha</th>
-    <th>Hora</th>
-    <th>Estatus</th>
-    <th>Acción</th>
-</tr>
-</thead>
-<tbody>
-
-<?php foreach ($visitas as $v): ?>
-<tr>
-    <td><?= htmlspecialchars($v['tipo_cita']) ?></td>
-    <td><?= $v['fecha'] ?></td>
-    <td><?= $v['hora'] ?></td>
-    <td><?= htmlspecialchars($v['estatus_cita']) ?></td>
-    <td>
-
-    <?php if ($v['estatus_cita'] !== 'Realizada'): ?>
-
-        <!-- ASISTIÓ -->
-        <form method="POST" action="marcarCitaRealizada.php" class="d-inline">
-            <input type="hidden" name="id_cita" value="<?= $v['id_cita'] ?>">
-            <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-            <button class="btn btn-sm btn-success">
-                 Asistió
-            </button>
-        </form>
-
-        <!-- NO ASISTIÓ -->
-        <form method="POST" action="marcarNoAsistio.php" class="d-inline">
-            <input type="hidden" name="id_cita" value="<?= $v['id_cita'] ?>">
-            <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-            <button class="btn btn-sm btn-danger"
-                onclick="return confirm('¿El solicitante NO asistió? Esto cancelará la solicitud.')">
-                 No asistió
-            </button>
-        </form>
-
-    <?php else: ?>
-        ✔
-    <?php endif; ?>
-
-    </td>
-</tr>
-<?php endforeach; ?>
-
-</tbody>
-</table>
-<?php endif; ?>
-
-<a href="programaCita.php?id=<?= $idSolicitud ?>" class="btn btn-outline-primary mt-2">
- Programar visita
-</a>
-
-<form method="POST" action="avanzarPeriodoPrueba.php" class="mt-3">
-    <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-    <button class="btn btn-warning">
-         Avanzar a periodo de prueba
-    </button>
-</form>
-
-</div>
-</div>
-
-
-<!-- ================= FASE 3 · PERIODO DE PRUEBA ================= -->
-<div class="card mb-4 border-warning">
-<div class="card-header fw-bold">FASE 3 · Periodo de prueba</div>
-<div class="card-body">
-
-<table class="table table-bordered text-center">
+<table class="table table-bordered table-hover align-middle">
 <thead class="table-light">
 <tr>
-<th>Evento</th>
-<th>Fecha</th>
-<th>Hora</th>
+  <th>Solicitante</th>
+  <th>Mascota</th>
+  <th>Estatus del proceso</th>
+  <th>Fecha de solicitud</th>
+  <th>Acciones</th>
 </tr>
 </thead>
 <tbody>
 
+<?php while ($row = pg_fetch_assoc($res)): ?>
 <tr>
-<td><b>Inicio del periodo</b></td>
-<td><?= $inicioPrueba ? $inicioPrueba['fecha'] : 'No programado' ?></td>
-<td><?= $inicioPrueba ? $inicioPrueba['hora'] : '—' ?></td>
+  <td><?= htmlspecialchars($row['solicitante']) ?></td>
+  <td><?= htmlspecialchars($row['mascota']) ?></td>
+  <td>
+    <span class="badge bg-secondary">
+      <?= htmlspecialchars($row['estatus_proceso']) ?>
+    </span>
+  </td>
+  <td><?= $row['fecha_solicitud'] ?></td>
+  <td>
+    <a href="verSolicitudAdopcion.php?id=<?= $row['id_solicitud'] ?>"
+       class="btn btn-sm btn-outline-primary">
+       Ver solicitud
+    </a>
+  </td>
 </tr>
-
-<tr>
-<td><b>Fin del periodo</b></td>
-<td><?= $finPrueba ? $finPrueba['fecha'] : 'No programado' ?></td>
-<td><?= $finPrueba ? $finPrueba['hora'] : '—' ?></td>
-</tr>
-
-<tr>
-<td><b>Visita de revisión</b></td>
-<td><?= $visitaSeguimiento ? $visitaSeguimiento['fecha'] : 'No programada' ?></td>
-<td><?= $visitaSeguimiento ? $visitaSeguimiento['hora'] : '—' ?></td>
-</tr>
+<?php endwhile; ?>
 
 </tbody>
 </table>
 
-<?php if (!$inicioPrueba || !$finPrueba): ?>
-<a href="programarPrueba.php?id=<?= $idSolicitud ?>" class="btn btn-primary">
-📅 Programar periodo de prueba
-</a>
-<hr>
+<?php else: ?>
+
+<div class="alert alert-info">
+No hay solicitudes registradas.
+</div>
+
 <?php endif; ?>
 
-<h6 class="fw-bold mt-3">Resultado del periodo de prueba</h6>
-
-<form method="POST" action="evaluarPeriodoPrueba.php">
-<input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-
-<div class="form-check">
-<input class="form-check-input" type="radio" name="resultado" value="apto" required>
-<label class="form-check-label">
-✅ La mascota se adaptó al entorno
-</label>
 </div>
 
-<div class="form-check">
-<input class="form-check-input" type="radio" name="resultado" value="no_apto">
-<label class="form-check-label">
-❌ La mascota NO se adaptó (detener adopción)
-</label>
-</div>
-
-<textarea name="observaciones" class="form-control mt-3"
-placeholder="Observaciones del periodo de prueba" required></textarea>
-
-<button class="btn btn-success mt-3">
-💾 Guardar resultado
-</button>
-</form>
-
-<hr>
-
-<form method="POST" action="finalizarAdopcion.php">
-    <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-    <button class="btn btn-success w-100">
-        🐾 Confirmar adopción y firmar
-    </button>
-</form>
-
-
-</div>
-</div>
+</body>
+</html>

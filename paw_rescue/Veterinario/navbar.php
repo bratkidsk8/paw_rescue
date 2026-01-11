@@ -1,9 +1,3 @@
-<?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-?>
-
 <nav class="navbar navbar-expand-lg bg-white shadow-sm">
   <div class="container-fluid">
 
@@ -22,25 +16,11 @@ if (session_status() === PHP_SESSION_NONE) {
 
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link" href="info.php">Acerca de</a>
+          <a class="nav-link" href="index.php">Consultas</a>
         </li>
-
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#"
-             role="button" data-bs-toggle="dropdown">
-            Adoptar
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="adoptar.php">Ver mascotas</a></li>
-            <li><a class="dropdown-item" href="cuestionario.php">Cuestionario</a></li>
-            <li><a class="dropdown-item" href="procesoAdopcion.php">Mi proceso de adopcion</a></li>
-          </ul>
+        <li class="nav-item">
+          <a class="nav-link" href="formulario_consulta.php">Agregar consulta</a>
         </li>
-
-        <li class="nav-item"><a class="nav-link" href="donar.php">Donaciones</a></li>
-        <li class="nav-item"><a class="nav-link" href="reporte.php">Reportar</a></li>
-        <li class="nav-item"><a class="nav-link" href="contacto.php">Contacto</a></li>
-      </ul>
 
       <!-- ===== SESIÓN ===== -->
       <?php if (isset($_SESSION['id_usuario'])): ?>
@@ -57,7 +37,7 @@ if (session_status() === PHP_SESSION_NONE) {
             </li>
             <li><hr class="dropdown-divider"></li>
             <li>
-              <a class="dropdown-item text-danger" href="logout.php">
+              <a class="dropdown-item text-danger" href="../Usuario/logout.php">
                 Cerrar sesión
               </a>
             </li>

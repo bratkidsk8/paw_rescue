@@ -10,7 +10,9 @@ if (!isset($_SESSION['id_usuario'])) {
 $idUsuario = $_SESSION['id_usuario'];
 $idAnimal  = $_POST['id_animal'];
 
-/* ESTATUS MASCOTA */
+/* ===============================
+   VERIFICAR ESTATUS MASCOTA
+================================= */
 $sql = "
 SELECT ea.nombre AS estatus
 FROM paw_rescue.animal a

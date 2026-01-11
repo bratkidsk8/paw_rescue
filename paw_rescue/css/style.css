@@ -4,7 +4,8 @@ body {
 
 .hero {
   background: url('../img/pug.jpg') no-repeat center center/cover;
-  height: 100vh;
+  min-height: 100vh;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -128,3 +129,12 @@ footer {
   font-size: 14px;
   color: #333;
 }
+
+html, body {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow: visible;
+}
+
+
