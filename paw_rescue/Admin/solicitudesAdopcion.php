@@ -49,7 +49,7 @@ if (!$res) {
 <?php include("navbar.php"); ?>
 <div class="container mt-5">
 
-<h2 class="mb-4">📋 Solicitudes de adopción</h2>
+<h2 class="mb-4"> Solicitudes de adopción</h2>
 
 <?php if (pg_num_rows($res) > 0): ?>
 

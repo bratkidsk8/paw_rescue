@@ -26,14 +26,20 @@ $idEstatus = (int)$data['id_estatus'];
 
 /* ===== CITAS ===== */
 $sqlCitas = "
-SELECT ca.id_cita, ca.fecha, ca.hora,
-       tc.nombre AS tipo_cita, ec.nombre AS estatus_cita
+SELECT 
+    ca.id_cita,
+    ca.fecha,
+    ca.hora,
+    ca.id_estatus,
+    tc.nombre AS tipo_cita,
+    ec.nombre AS estatus_cita
 FROM paw_rescue.cita_adopcion ca
 JOIN paw_rescue.tipo_cita tc ON tc.id_tipo = ca.id_tipo
 JOIN paw_rescue.estatus_cita ec ON ec.id_estatus = ca.id_estatus
 WHERE ca.id_solicitud = $1
 ORDER BY ca.fecha
 ";
+
 $resCitas = pg_query_params($conexion, $sqlCitas, [$idSolicitud]);
 
 $visitas = [];
@@ -136,30 +142,29 @@ while ($c = pg_fetch_assoc($resCitas)) {
     <td><?= htmlspecialchars($v['estatus_cita']) ?></td>
     <td>
 
-    <?php if ($v['estatus_cita'] !== 'Realizada'): ?>
+    <?php if ((int)$v['id_estatus'] !== 3): ?>
 
-        <!-- ASISTIÓ -->
-        <form method="POST" action="marcarCitaRealizada.php" class="d-inline">
-            <input type="hidden" name="id_cita" value="<?= $v['id_cita'] ?>">
-            <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-            <button class="btn btn-sm btn-success">
-                 Asistió
-            </button>
-        </form>
+    <form method="POST" action="marcarCitaRealizada.php" class="d-inline">
+        <input type="hidden" name="id_cita" value="<?= $v['id_cita'] ?>">
+        <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
+        <button class="btn btn-sm btn-success">
+            Asistió
+        </button>
+    </form>
 
-        <!-- NO ASISTIÓ -->
-        <form method="POST" action="marcarNoAsistio.php" class="d-inline">
-            <input type="hidden" name="id_cita" value="<?= $v['id_cita'] ?>">
-            <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
-            <button class="btn btn-sm btn-danger"
-                onclick="return confirm('¿El solicitante NO asistió? Esto cancelará la solicitud.')">
-                 No asistió
-            </button>
-        </form>
+    <form method="POST" action="marcarNoAsistio.php" class="d-inline">
+        <input type="hidden" name="id_cita" value="<?= $v['id_cita'] ?>">
+        <input type="hidden" name="id_solicitud" value="<?= $idSolicitud ?>">
+        <button class="btn btn-sm btn-danger"
+            onclick="return confirm('¿El solicitante NO asistió? Esto cancelará la solicitud.')">
+            No asistió
+        </button>
+    </form>
 
     <?php else: ?>
         ✔
     <?php endif; ?>
+
 
     </td>
 </tr>
@@ -222,7 +227,7 @@ while ($c = pg_fetch_assoc($resCitas)) {
 
 <?php if (!$inicioPrueba || !$finPrueba): ?>
 <a href="programarPrueba.php?id=<?= $idSolicitud ?>" class="btn btn-primary">
-📅 Programar periodo de prueba
+Programar periodo de prueba
 </a>
 <hr>
 <?php endif; ?>
@@ -235,14 +240,14 @@ while ($c = pg_fetch_assoc($resCitas)) {
 <div class="form-check">
 <input class="form-check-input" type="radio" name="resultado" value="apto" required>
 <label class="form-check-label">
-✅ La mascota se adaptó al entorno
+La mascota se adaptó al entorno
 </label>
 </div>
 
 <div class="form-check">
 <input class="form-check-input" type="radio" name="resultado" value="no_apto">
 <label class="form-check-label">
-❌ La mascota NO se adaptó (detener adopción)
+ La mascota NO se adaptó
 </label>
 </div>
 
